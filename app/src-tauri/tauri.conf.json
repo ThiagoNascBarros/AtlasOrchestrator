@@ -5,9 +5,9 @@
   "version": "0.1.0",
   "identifier": "org.atlasoq.AtlasOQ",
   "build": {
-    "beforeDevCommand": "pnpm -C ui dev",
+    "beforeDevCommand": "../scripts/prepare-cli.sh debug && pnpm -C ui dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "pnpm -C ui build",
+    "beforeBuildCommand": "../scripts/prepare-cli.sh release && pnpm -C ui build",
     "frontendDist": "../ui/dist"
   },
   "app": {
@@ -26,7 +26,9 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["deb"],
+    "targets": [
+      "deb"
+    ],
     "category": "DeveloperTool",
     "shortDescription": "Canvas infinito para orquestrar agentes de IA",
     "longDescription": "AtlasOQ coloca cada agente de IA num terminal real dentro de um canvas infinito, ao lado de notas, e permite que agentes conectados conversem pela CLI atlasoq.",
@@ -40,8 +42,14 @@
     ],
     "linux": {
       "deb": {
-        "depends": ["libwebkit2gtk-4.1-0", "libgtk-3-0"]
+        "depends": [
+          "libwebkit2gtk-4.1-0",
+          "libgtk-3-0"
+        ]
       }
-    }
+    },
+    "externalBin": [
+      "binaries/atlasoq"
+    ]
   }
 }

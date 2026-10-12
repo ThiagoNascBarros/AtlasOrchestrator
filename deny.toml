@@ -5,6 +5,11 @@ all-features = true
 [advisories]
 version = 2
 yanked = "deny"
+ignore = [
+    # proc-macro-error: sem manutenção, dependência transitiva do Tauri via gtk-rs (GTK3).
+    # Reavaliar quando o Tauri migrar para GTK4.
+    { id = "RUSTSEC-2024-0370", reason = "transitiva do Tauri, sem alternativa no momento" },
+]
 
 [licenses]
 version = 2
@@ -28,6 +33,7 @@ allow = [
 [bans]
 multiple-versions = "allow"
 wildcards = "deny"
+allow-wildcard-paths = true
 
 [sources]
 unknown-registry = "deny"
