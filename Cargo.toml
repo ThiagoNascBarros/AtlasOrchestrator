@@ -41,6 +41,7 @@ strsim = "0.11.1"
 clap = { version = "4.6.7", features = ["derive"] }
 tauri = "2.12.3"
 tauri-build = "2.7.2"
+tauri-plugin-dialog = "2.8.2"
 
 assert_cmd = "2.2.2"
 insta = "1.49.0"

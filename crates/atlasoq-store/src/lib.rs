@@ -8,6 +8,7 @@ pub mod lock;
 pub mod model;
 pub mod paths;
 pub mod profiles;
+pub mod recent;
 pub mod validate;
 pub mod workspace;
 

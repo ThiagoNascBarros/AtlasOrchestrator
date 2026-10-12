@@ -94,9 +94,9 @@ e teste por modo de hook (FR-030), sanitização (SC-006), encerramento forçado
 
 ### Integração Tauri base
 
-- [ ] T040 Implementar o estado do app (workspace aberto, `LocalSessionHost`, autosave) e os comandos Tauri `workspace_create`, `workspace_open`, `workspace_recent` em app/src-tauri/src/state.rs e app/src-tauri/src/commands/workspace.rs
-- [ ] T041 Implementar streaming de saída por sessão via `tauri::ipc::Channel` binário e os comandos `session_write`, `session_resize`, `session_snapshot` em app/src-tauri/src/commands/session.rs
-- [ ] T042 Encerrar todas as sessões no fechamento da janela e no sinal de término do app em app/src-tauri/src/lifecycle.rs
+- [X] T040 Implementar o estado do app (workspace aberto, `LocalSessionHost`, autosave) e os comandos Tauri `workspace_create`, `workspace_open`, `workspace_recent` em app/src-tauri/src/state.rs e app/src-tauri/src/commands/workspace.rs
+- [X] T041 Implementar streaming de saída por sessão via `tauri::ipc::Channel` binário e os comandos `session_write`, `session_resize`, `session_snapshot` em app/src-tauri/src/commands/session.rs
+- [X] T042 Encerrar todas as sessões no fechamento da janela e no sinal de término do app em app/src-tauri/src/lifecycle.rs
 - [ ] T043 [P] Criar o store Zustand com padrão de comandos (aplicar/desfazer) e cliente tipado dos comandos Tauri em app/ui/src/store/index.ts e app/ui/src/store/tauri.ts
 - [ ] T044 [P] Carregar o catálogo de textos pt-BR da UI em app/ui/src/i18n/pt-BR.ts
 
