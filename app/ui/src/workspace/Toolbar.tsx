@@ -12,6 +12,7 @@ export function Toolbar() {
   const canRedo = useUi((s) => s.future.length > 0);
   const grid = useUi((s) => s.grid);
   const focus = useUi((s) => s.focus.focus);
+  const zoom = useUi((s) => s.viewport.zoom);
 
   const newAgent = () => {
     const s = useUi.getState();
@@ -49,8 +50,8 @@ export function Toolbar() {
       <button onClick={() => zoomBy(1 / 1.2)} aria-label="Afastar">
         −
       </button>
-      <button onClick={() => zoomBy(0)} aria-label="Zoom 100%">
-        100%
+      <button onClick={() => zoomBy(0)} aria-label="Zoom 100%" title="100%">
+        {Math.round(zoom * 100)}%
       </button>
       <button onClick={() => zoomBy(1.2)} aria-label="Aproximar">
         +
