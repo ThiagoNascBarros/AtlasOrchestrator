@@ -127,3 +127,21 @@ export interface AttachInfo {
   cols: number;
   rows: number;
 }
+
+export interface LinkMessageEvent {
+  conn_id: string;
+  from_id: string;
+  to_id: string;
+  kind: "send" | "ask" | "reply";
+}
+
+/** Linha do histórico de uma conexão (log de auditoria). */
+export interface HistoryEntry {
+  ts: string;
+  event: string;
+  kind?: string;
+  from?: string;
+  to?: string;
+  text?: string;
+  result?: string;
+}

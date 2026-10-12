@@ -71,11 +71,7 @@ fn usage_error(err: &mut dyn Write, message: &str, cmd: &str) -> i32 {
 
 /// Texto do comando: argumentos unidos por espaço ou, sem eles, a entrada padrão (se não for
 /// um terminal).
-fn text_from(
-    words: &[String],
-    stdin: &mut dyn Read,
-    stdin_tty: bool,
-) -> Option<String> {
+fn text_from(words: &[String], stdin: &mut dyn Read, stdin_tty: bool) -> Option<String> {
     if !words.is_empty() {
         return Some(words.join(" "));
     }
@@ -153,8 +149,7 @@ pub fn run(
         _ => {}
     }
 
-    let (op, args_json) = match build_request(command.name, rest, &parsed, stdin, stdin_tty)
-    {
+    let (op, args_json) = match build_request(command.name, rest, &parsed, stdin, stdin_tty) {
         Ok(r) => r,
         Err(msg) => return usage_error(err, &msg, command.name),
     };
@@ -207,7 +202,9 @@ fn build_request(
             if rest.len() > 1 {
                 return Err("o comando read recebe só o nome do agente.".into());
             }
-            let lines = p.lines.unwrap_or(atlasoq_core::protocol::DEFAULT_READ_LINES);
+            let lines = p
+                .lines
+                .unwrap_or(atlasoq_core::protocol::DEFAULT_READ_LINES);
             ("read", json!({ "from": from, "lines": lines }))
         }
         "ask" => {
@@ -237,7 +234,10 @@ fn build_request(
         "note" => {
             let note = rest.first().ok_or("falta o nome da nota.")?;
             if rest.len() > 1 {
-                ("note_append", json!({ "note": note, "text": rest[1..].join(" ") }))
+                (
+                    "note_append",
+                    json!({ "note": note, "text": rest[1..].join(" ") }),
+                )
             } else if !stdin_tty {
                 match text_from(&[], stdin, stdin_tty) {
                     Some(t) => ("note_append", json!({ "note": note, "text": t })),
@@ -304,7 +304,11 @@ fn render(
             let _ = writeln!(out, "{}", data["text"].as_str().unwrap_or(""));
         }
         "reply" => {
-            let _ = writeln!(out, "resposta enviada para {}", data["to"].as_str().unwrap_or(""));
+            let _ = writeln!(
+                out,
+                "resposta enviada para {}",
+                data["to"].as_str().unwrap_or("")
+            );
         }
         "list" => render_list(&data, out),
         _ => {}

@@ -80,7 +80,12 @@ impl LoopGuard {
         let n = limits.ping_pong_repeats as usize;
         if n > 0 {
             let repeated = self.recent.len() + 1 >= n
-                && self.recent.iter().rev().take(n - 1).all(|h| *h == text_hash);
+                && self
+                    .recent
+                    .iter()
+                    .rev()
+                    .take(n - 1)
+                    .all(|h| *h == text_hash);
             if repeated {
                 return Verdict::Pause(PauseReason::PingPong);
             }

@@ -74,9 +74,9 @@ impl Broker {
             .into_iter()
             .filter(|n| !n.is_note && n.id != me.id)
             .filter(|n| {
-                conns
-                    .iter()
-                    .any(|c| acl::links(c, &me.id, &n.id) && acl::direction_allows(c, &me.id, &n.id))
+                conns.iter().any(|c| {
+                    acl::links(c, &me.id, &n.id) && acl::direction_allows(c, &me.id, &n.id)
+                })
             })
             .map(|n| n.name)
             .collect()
@@ -134,7 +134,10 @@ impl Broker {
     fn session_ready(&self, target: &NodeInfo) -> Result<bool, Response> {
         match self.host.session(&target.id) {
             Some(s) if !s.exited => Ok(s.bracketed_paste),
-            _ => Err(fail(ErrorKind::TargetExited, i18n::target_exited(&target.name))),
+            _ => Err(fail(
+                ErrorKind::TargetExited,
+                i18n::target_exited(&target.name),
+            )),
         }
     }
 
@@ -232,10 +235,29 @@ impl Broker {
                 bracketed,
                 self.submit_delay,
             ) {
-                self.log_message("send", me, &target, Some(&conn.id), Some(id), Some(&text), &format!("failed:{e}"));
-                return Err(fail(ErrorKind::TargetExited, i18n::target_exited(&target.name)));
+                self.log_message(
+                    "send",
+                    me,
+                    &target,
+                    Some(&conn.id),
+                    Some(id),
+                    Some(&text),
+                    &format!("failed:{e}"),
+                );
+                return Err(fail(
+                    ErrorKind::TargetExited,
+                    i18n::target_exited(&target.name),
+                ));
             }
-            self.log_message("send", me, &target, Some(&conn.id), Some(id), Some(&text), "delivered");
+            self.log_message(
+                "send",
+                me,
+                &target,
+                Some(&conn.id),
+                Some(id),
+                Some(&text),
+                "delivered",
+            );
             self.flow(&conn.id, me, &target, "send");
             Ok(Response::ok(json!({ "msg_id": id, "to": target.name })))
         };
@@ -257,7 +279,15 @@ impl Broker {
             .and_then(|e| serde_json::to_value(e).ok())
             .and_then(|v| v.as_str().map(str::to_owned))
             .unwrap_or_default();
-        self.log_message(kind, me, &target, None, None, None, &format!("refused:{why}"));
+        self.log_message(
+            kind,
+            me,
+            &target,
+            None,
+            None,
+            None,
+            &format!("refused:{why}"),
+        );
     }
 
     fn op_read(&self, me: &NodeInfo, from: &str, lines: u32) -> Response {
@@ -265,7 +295,10 @@ impl Broker {
             let target = self.resolve(me, from)?;
             let conn = self.authorize(me, &target)?;
             if self.host.session(&target.id).is_none() {
-                return Err(fail(ErrorKind::TargetExited, i18n::target_exited(&target.name)));
+                return Err(fail(
+                    ErrorKind::TargetExited,
+                    i18n::target_exited(&target.name),
+                ));
             }
             let lines = lines.clamp(1, MAX_READ_LINES) as usize;
             let text = self
@@ -308,10 +341,26 @@ impl Broker {
             self.submit_delay,
         ) {
             self.asks.remove(id);
-            self.log_message("ask", me, &target, Some(&conn.id), Some(id), Some(&text), &format!("failed:{e}"));
+            self.log_message(
+                "ask",
+                me,
+                &target,
+                Some(&conn.id),
+                Some(id),
+                Some(&text),
+                &format!("failed:{e}"),
+            );
             return fail(ErrorKind::TargetExited, i18n::target_exited(&target.name));
         }
-        self.log_message("ask", me, &target, Some(&conn.id), Some(id), Some(&text), "delivered");
+        self.log_message(
+            "ask",
+            me,
+            &target,
+            Some(&conn.id),
+            Some(id),
+            Some(&text),
+            "delivered",
+        );
         self.flow(&conn.id, me, &target, "ask");
 
         let timeout = timeout_s.clamp(1, 3600);
@@ -322,12 +371,27 @@ impl Broker {
             || self.ask_cancelled(&conn.id, &target),
         );
         match outcome {
-            Outcome::Answered(answer) => Response::ok(json!({ "text": answer, "from": target.name })),
+            Outcome::Answered(answer) => {
+                Response::ok(json!({ "text": answer, "from": target.name }))
+            }
             Outcome::TimedOut => {
-                self.log_message("ask", me, &target, Some(&conn.id), Some(id), None, "timeout");
+                self.log_message(
+                    "ask",
+                    me,
+                    &target,
+                    Some(&conn.id),
+                    Some(id),
+                    None,
+                    "timeout",
+                );
                 let m = i18n::ask_timeout(&target.name, timeout);
                 let screen = self.host.screen_text(&target.id, 60).unwrap_or_default();
-                Response::err_with_data(ErrorKind::Timeout, m.message, m.hint, json!({ "screen": screen }))
+                Response::err_with_data(
+                    ErrorKind::Timeout,
+                    m.message,
+                    m.hint,
+                    json!({ "screen": screen }),
+                )
             }
             Outcome::Cancelled(kind, message) => Response::err(kind, message, ""),
         }
@@ -356,7 +420,10 @@ impl Broker {
         }
         match self.host.session(&target.id) {
             Some(s) if !s.exited => None,
-            _ => Some((ErrorKind::TargetExited, i18n::target_exited(&target.name).message)),
+            _ => Some((
+                ErrorKind::TargetExited,
+                i18n::target_exited(&target.name).message,
+            )),
         }
     }
 
@@ -403,7 +470,15 @@ impl Broker {
         if let Some(g) = self.guards.lock().unwrap().get_mut(&conn_id) {
             g.note_exchange(Instant::now(), user_input);
         }
-        self.log_message("reply", me, &asker, Some(&conn_id), Some(chosen.id), Some(&text), "delivered");
+        self.log_message(
+            "reply",
+            me,
+            &asker,
+            Some(&conn_id),
+            Some(chosen.id),
+            Some(&text),
+            "delivered",
+        );
         self.flow(&conn_id, me, &asker, "reply");
         Response::ok(json!({ "to": asker.name }))
     }
@@ -419,8 +494,10 @@ impl Broker {
         let mut agents = Vec::new();
         let mut notes = Vec::new();
         for n in nodes.iter().filter(|n| n.id != me.id) {
-            let linked: Vec<&Connection> =
-                conns.iter().filter(|c| acl::links(c, &me.id, &n.id)).collect();
+            let linked: Vec<&Connection> = conns
+                .iter()
+                .filter(|c| acl::links(c, &me.id, &n.id))
+                .collect();
             let Some(conn) = linked.first() else { continue };
             let i_can = acl::direction_allows(conn, &me.id, &n.id);
             let they_can = acl::direction_allows(conn, &n.id, &me.id);

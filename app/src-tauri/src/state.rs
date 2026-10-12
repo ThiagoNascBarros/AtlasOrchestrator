@@ -87,7 +87,11 @@ impl AppState {
 
     /// Caminho do socket do atlasoq, injetado nos agentes.
     pub fn socket_path(&self) -> Option<std::path::PathBuf> {
-        self.server.lock().unwrap().as_ref().map(|s| s.path().to_path_buf())
+        self.server
+            .lock()
+            .unwrap()
+            .as_ref()
+            .map(|s| s.path().to_path_buf())
     }
 
     /// Registra um terminal montado e devolve (id, sinal de parada).

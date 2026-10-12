@@ -37,6 +37,32 @@ export const t = {
     exited: (code: number | null | undefined) =>
       code === null || code === undefined ? "encerrado" : `encerrado (código ${code})`,
   },
+  connection: {
+    port: "Arraste até outro agente para conectar",
+    direction: "Direção",
+    pause: "Pausar",
+    resume: "Reativar",
+    history: "Histórico",
+    remove: "Apagar conexão",
+    close: "Fechar",
+    active: "ativa",
+    paused: "pausada",
+    autoPaused: "pausada automaticamente",
+    reasons: {
+      max_exchanges: "muitas trocas seguidas sem intervenção humana",
+      rate_limit: "mensagens demais por minuto",
+      ping_pong: "vai-e-vem repetitivo",
+    },
+    autoPausedNotice: (a: string, b: string, why: string) =>
+      `Conexão ${a} ↔ ${b} pausada automaticamente: ${why}. Abra o histórico e reative se estiver tudo certo.`,
+    empty: "Nenhuma mensagem ainda.",
+    events: {
+      connection_created: "conexão criada",
+      connection_paused: "conexão pausada",
+      connection_resumed: "conexão reativada",
+      connection_deleted: "conexão apagada",
+    },
+  },
   newAgent: {
     title: "Novo agente",
     profile: "CLI",

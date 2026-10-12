@@ -65,7 +65,14 @@ fn skip_escape(it: &mut std::iter::Peekable<std::str::Chars<'_>>) {
 /// Verdadeiro se o texto parece conter um segredo (chaves de API, tokens, chaves privadas).
 pub fn looks_like_secret(text: &str) -> bool {
     const PREFIXES: [&str; 8] = [
-        "sk-", "ghp_", "gho_", "github_pat_", "AKIA", "xoxb-", "xoxp-", "AIza",
+        "sk-",
+        "ghp_",
+        "gho_",
+        "github_pat_",
+        "AKIA",
+        "xoxb-",
+        "xoxp-",
+        "AIza",
     ];
     if text.contains("-----BEGIN") && text.contains("PRIVATE KEY") {
         return true;

@@ -4,6 +4,7 @@ import { api } from "../api/tauri";
 import type { Agent } from "../api/types";
 import { NodeFrame, TITLE_H } from "../canvas/NodeFrame";
 import { t } from "../i18n/pt-BR";
+import { startConnect } from "../connections/connect";
 import { errorText, useUi } from "../store";
 import { AgentCard } from "./AgentCard";
 import { TerminalView } from "./Terminal";
@@ -34,6 +35,14 @@ export function AgentNode({ agent, lod }: { agent: Agent; lod: boolean }) {
       <span className="node-cwd" title={agent.terminal.cwd}>
         {agent.terminal.cwd}
       </span>
+      <button
+        className="icon-btn port"
+        aria-label={t.connection.port}
+        title={t.connection.port}
+        onPointerDown={(e) => startConnect(agent.id, e)}
+      >
+        ⟶
+      </button>
       <button
         className="icon-btn"
         aria-label={t.agent.menu}

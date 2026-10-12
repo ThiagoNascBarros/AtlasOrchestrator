@@ -111,7 +111,12 @@ impl AskTable {
     }
 
     /// Cancela as perguntas que satisfazem `pred` (pausa, remoção, encerramento).
-    pub fn cancel_where(&self, pred: impl Fn(&str, &str, &str) -> bool, kind: ErrorKind, msg: &str) {
+    pub fn cancel_where(
+        &self,
+        pred: impl Fn(&str, &str, &str) -> bool,
+        kind: ErrorKind,
+        msg: &str,
+    ) {
         let mut g = self.inner.lock().unwrap();
         for a in g.asks.iter_mut().filter(|a| a.state == State::Waiting) {
             if pred(&a.conn_id, &a.from_id, &a.to_id) {

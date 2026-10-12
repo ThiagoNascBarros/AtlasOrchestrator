@@ -143,31 +143,31 @@ e teste por modo de hook (FR-030), sanitização (SC-006), encerramento forçado
 
 ### Tests for User Story 2
 
-- [ ] T060 [P] [US2] Teste de sanitização com conjunto de payloads (ESC, CSI, OSC, DCS, C0/C1, Ctrl-C, `\r\n`) verificando 100% neutralizados (SC-006) em crates/atlasoq-link/tests/sanitize.rs
-- [ ] T061 [P] [US2] Teste de autenticação: uid diferente, token errado, nó inexistente e `v` não suportado são recusados em crates/atlasoq-link/tests/auth.rs
-- [ ] T062 [P] [US2] Teste de integração com dois PTYs reais: criar conexão `forward`, `send` entregue com cabeçalho, sentido inverso recusado, pausa recusa imediatamente, apagar recusa em tests/integration/two_ptys_connection.rs
-- [ ] T063 [P] [US2] Teste de integração do `ask`/`reply`: resposta exata devolvida; tempo esgotado devolve tela com código 5; `reply` sem pergunta (código 3), ambíguo (código 2) e expirado (código 3); cancelamento por pausa/encerramento em tests/integration/ask_reply.rs
-- [ ] T064 [P] [US2] Teste da proteção contra loops: 20 trocas sem entrada humana pausam a conexão (SC-007); tecla do usuário zera; limite de taxa; ping-pong em crates/atlasoq-link/tests/loop_guard.rs
-- [ ] T065 [P] [US2] Testes de contrato da CLI com `assert_cmd` + `insta` para `list`, `send`, `read`, `ask`, `reply`, `help`, códigos de saída 0/2/3/4/5/6/7, mensagens de erro, `--json`, texto por stdin e sugestão de comando com distância de edição ≤ 2 (SC-004) em crates/atlasoq-cli/tests/contract.rs
+- [x] T060 [P] [US2] Teste de sanitização com conjunto de payloads (ESC, CSI, OSC, DCS, C0/C1, Ctrl-C, `\r\n`) verificando 100% neutralizados (SC-006) em crates/atlasoq-link/tests/sanitize.rs
+- [x] T061 [P] [US2] Teste de autenticação: uid diferente, token errado, nó inexistente e `v` não suportado são recusados em crates/atlasoq-link/tests/auth.rs
+- [x] T062 [P] [US2] Teste de integração com dois PTYs reais: criar conexão `forward`, `send` entregue com cabeçalho, sentido inverso recusado, pausa recusa imediatamente, apagar recusa em tests/integration/two_ptys_connection.rs
+- [x] T063 [P] [US2] Teste de integração do `ask`/`reply`: resposta exata devolvida; tempo esgotado devolve tela com código 5; `reply` sem pergunta (código 3), ambíguo (código 2) e expirado (código 3); cancelamento por pausa/encerramento em tests/integration/ask_reply.rs
+- [x] T064 [P] [US2] Teste da proteção contra loops: 20 trocas sem entrada humana pausam a conexão (SC-007); tecla do usuário zera; limite de taxa; ping-pong em crates/atlasoq-link/tests/loop_guard.rs
+- [x] T065 [P] [US2] Testes de contrato da CLI com `assert_cmd` + `insta` para `list`, `send`, `read`, `ask`, `reply`, `help`, códigos de saída 0/2/3/4/5/6/7, mensagens de erro, `--json`, texto por stdin e sugestão de comando com distância de edição ≤ 2 (SC-004) em crates/atlasoq-cli/tests/contract.rs
 
 ### Implementation for User Story 2
 
-- [ ] T066 [P] [US2] Implementar a sanitização (remover C0/C1 exceto `\n` e `\t`, remover ESC/CSI/OSC/DCS, normalizar quebras) e o limite de 16 KiB em crates/atlasoq-link/src/sanitize.rs
-- [ ] T067 [P] [US2] Implementar o servidor de socket Unix em `$XDG_RUNTIME_DIR/atlasoq/<instância>.sock` (diretório `0700`, socket `0600`), uma requisição por conexão, linhas de até 64 KiB em crates/atlasoq-link/src/server.rs
-- [ ] T068 [US2] Implementar autenticação (`SO_PEERCRED` mesmo uid, token de 256 bits por spawn comparado em tempo constante, versão) e a geração de `ATLASOQ_SOCKET`, `ATLASOQ_NODE_ID`, `ATLASOQ_NODE_TOKEN` no ambiente de cada agente em crates/atlasoq-link/src/auth.rs
-- [ ] T069 [US2] Implementar a ACL a partir das conexões ativas (A → B: A envia, pergunta e lê B; B só responde a `ask` pendente de A; ↔: ambos) em crates/atlasoq-link/src/acl.rs
-- [ ] T070 [US2] Implementar a entrega: cabeçalho `[atlasoq de:<origem> msg:<id>]`, bracketed paste quando o destino ativou o modo 2004, `\r` após 150 ms, fila serial por destino em crates/atlasoq-link/src/delivery.rs
-- [ ] T071 [US2] Implementar `PendingAsk` (`waiting` → `answered` | `timed_out` | `cancelled`), formato `[atlasoq ask de:<origem> id:<n>] <texto> — responda com: atlasoq reply "..."`, timeout padrão de 600 s, `reply` só para pergunta pendente e entregue ao `ask` que espera em crates/atlasoq-link/src/ask.rs
-- [ ] T072 [US2] Implementar a proteção contra loops (`ExchangeCounter` com janela de 120 s, zera com tecla do usuário, limite de taxa com rajada, ping-pong por repetição) e a transição para `auto_paused` com `pause_reason` em crates/atlasoq-link/src/loop_guard.rs
-- [ ] T073 [US2] Implementar o log de auditoria JSONL diário em `.atlasoq/logs/links-AAAA-MM-DD.jsonl` (campos do `AuditEvent`, texto ou `text_sha256` conforme configuração) em crates/atlasoq-link/src/audit.rs
-- [ ] T074 [US2] Implementar os handlers `list`, `send`, `read`, `ask`, `reply` do broker em crates/atlasoq-link/src/handlers.rs
-- [ ] T075 [US2] Implementar a CLI `atlasoq` com os comandos `list`, `send`, `read`, `ask`, `reply`, `help`, saída texto/`--json`, texto por argumento ou stdin, erros no formato "erro: … / próximo passo" conforme contracts/cli.md em crates/atlasoq-cli/src/main.rs e crates/atlasoq-cli/src/commands/
-- [ ] T076 [US2] Implementar a sugestão de comando por distância de edição em crates/atlasoq-cli/src/suggest.rs
-- [ ] T077 [US2] Iniciar o broker com o app, colocar o diretório da CLI no início do `PATH` dos agentes e expor eventos de mensagem/estado de conexão à UI em app/src-tauri/src/broker.rs
-- [ ] T078 [US2] Implementar os comandos Tauri `connection_create` (sem auto-conexão), `connection_set_direction`, `connection_pause`, `connection_resume`, `connection_delete`, `connection_history` em app/src-tauri/src/commands/connection.rs
-- [ ] T079 [P] [US2] Implementar as linhas SVG das conexões com direção, estado (ativa, pausada, pausada automaticamente) e animação de passagem de mensagem em app/ui/src/connections/ConnectionLayer.tsx
-- [ ] T080 [US2] Implementar a criação de conexão arrastando de um nó a outro e o menu (direção, pausar, reativar, apagar) em app/ui/src/connections/connect.ts
-- [ ] T081 [US2] Implementar o painel de histórico da conexão (horário, origem, destino, texto, resultado) e o aviso de pausa automática em app/ui/src/connections/HistoryPanel.tsx
+- [x] T066 [P] [US2] Implementar a sanitização (remover C0/C1 exceto `\n` e `\t`, remover ESC/CSI/OSC/DCS, normalizar quebras) e o limite de 16 KiB em crates/atlasoq-link/src/sanitize.rs
+- [x] T067 [P] [US2] Implementar o servidor de socket Unix em `$XDG_RUNTIME_DIR/atlasoq/<instância>.sock` (diretório `0700`, socket `0600`), uma requisição por conexão, linhas de até 64 KiB em crates/atlasoq-link/src/server.rs
+- [x] T068 [US2] Implementar autenticação (`SO_PEERCRED` mesmo uid, token de 256 bits por spawn comparado em tempo constante, versão) e a geração de `ATLASOQ_SOCKET`, `ATLASOQ_NODE_ID`, `ATLASOQ_NODE_TOKEN` no ambiente de cada agente em crates/atlasoq-link/src/auth.rs
+- [x] T069 [US2] Implementar a ACL a partir das conexões ativas (A → B: A envia, pergunta e lê B; B só responde a `ask` pendente de A; ↔: ambos) em crates/atlasoq-link/src/acl.rs
+- [x] T070 [US2] Implementar a entrega: cabeçalho `[atlasoq de:<origem> msg:<id>]`, bracketed paste quando o destino ativou o modo 2004, `\r` após 150 ms, fila serial por destino em crates/atlasoq-link/src/delivery.rs
+- [x] T071 [US2] Implementar `PendingAsk` (`waiting` → `answered` | `timed_out` | `cancelled`), formato `[atlasoq ask de:<origem> id:<n>] <texto> — responda com: atlasoq reply "..."`, timeout padrão de 600 s, `reply` só para pergunta pendente e entregue ao `ask` que espera em crates/atlasoq-link/src/ask.rs
+- [x] T072 [US2] Implementar a proteção contra loops (`ExchangeCounter` com janela de 120 s, zera com tecla do usuário, limite de taxa com rajada, ping-pong por repetição) e a transição para `auto_paused` com `pause_reason` em crates/atlasoq-link/src/loop_guard.rs
+- [x] T073 [US2] Implementar o log de auditoria JSONL diário em `.atlasoq/logs/links-AAAA-MM-DD.jsonl` (campos do `AuditEvent`, texto ou `text_sha256` conforme configuração) em crates/atlasoq-link/src/audit.rs
+- [x] T074 [US2] Implementar os handlers `list`, `send`, `read`, `ask`, `reply` do broker em crates/atlasoq-link/src/handlers.rs
+- [x] T075 [US2] Implementar a CLI `atlasoq` com os comandos `list`, `send`, `read`, `ask`, `reply`, `help`, saída texto/`--json`, texto por argumento ou stdin, erros no formato "erro: … / próximo passo" conforme contracts/cli.md em crates/atlasoq-cli/src/main.rs e crates/atlasoq-cli/src/commands/
+- [x] T076 [US2] Implementar a sugestão de comando por distância de edição em crates/atlasoq-cli/src/suggest.rs
+- [x] T077 [US2] Iniciar o broker com o app, colocar o diretório da CLI no início do `PATH` dos agentes e expor eventos de mensagem/estado de conexão à UI em app/src-tauri/src/broker.rs
+- [x] T078 [US2] Implementar os comandos Tauri `connection_create` (sem auto-conexão), `connection_set_direction`, `connection_pause`, `connection_resume`, `connection_delete`, `connection_history` em app/src-tauri/src/commands/connection.rs
+- [x] T079 [P] [US2] Implementar as linhas SVG das conexões com direção, estado (ativa, pausada, pausada automaticamente) e animação de passagem de mensagem em app/ui/src/connections/ConnectionLayer.tsx
+- [x] T080 [US2] Implementar a criação de conexão arrastando de um nó a outro e o menu (direção, pausar, reativar, apagar) em app/ui/src/connections/connect.ts
+- [x] T081 [US2] Implementar o painel de histórico da conexão (horário, origem, destino, texto, resultado) e o aviso de pausa automática em app/ui/src/connections/HistoryPanel.tsx
 
 **Checkpoint**: US1 + US2: agentes conversam por conexões seguras e auditáveis.
 

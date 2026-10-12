@@ -90,7 +90,10 @@ impl Host for AppHost {
 
     fn write(&self, node_id: &str, data: &[u8]) -> Result<(), String> {
         let sid = self.session_id(node_id).ok_or("agente sem sessão")?;
-        self.state().host.write(sid, data).map_err(|e| e.to_string())
+        self.state()
+            .host
+            .write(sid, data)
+            .map_err(|e| e.to_string())
     }
 
     fn screen_text(&self, node_id: &str, lines: usize) -> Result<String, String> {

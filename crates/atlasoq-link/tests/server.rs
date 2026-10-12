@@ -23,7 +23,12 @@ fn socket_com_permissoes_restritas_e_uma_requisicao_por_conexao() {
     assert_eq!(mode(&path), 0o600);
 
     let mut s = UnixStream::connect(&path).unwrap();
-    writeln!(s, "{}", request("a_p", &token, "send", json!({"to": "coder", "text": "oi"}))).unwrap();
+    writeln!(
+        s,
+        "{}",
+        request("a_p", &token, "send", json!({"to": "coder", "text": "oi"}))
+    )
+    .unwrap();
     let mut line = String::new();
     BufReader::new(&s).read_line(&mut line).unwrap();
     let r: Value = serde_json::from_str(&line).unwrap();

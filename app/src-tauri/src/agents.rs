@@ -7,8 +7,8 @@ use atlasoq_store::Agent;
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
 
-use crate::commands::session::{to_event, StatusEvent};
 use crate::broker::cli_dir;
+use crate::commands::session::{to_event, StatusEvent};
 use crate::state::{AppState, OpenWorkspace};
 
 /// Evento global com o status de um agente (cartões e barras de título usam).
@@ -52,7 +52,8 @@ pub fn launch(
     let broker = state.broker();
     // Cada sessão nasce com token novo; o do processo anterior deixa de valer.
     if let Some(socket) = state.socket_path() {
-        spec.env.push(("ATLASOQ_SOCKET".into(), socket.display().to_string()));
+        spec.env
+            .push(("ATLASOQ_SOCKET".into(), socket.display().to_string()));
         spec.env.push(("ATLASOQ_NODE_ID".into(), agent.id.clone()));
         spec.env
             .push(("ATLASOQ_NODE_TOKEN".into(), broker.issue_token(&agent.id)));

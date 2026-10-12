@@ -49,7 +49,11 @@ pub fn conn(id: &str, from: &str, to: &str, direction: Direction) -> Connection 
 impl FakeHost {
     pub fn new(conns: Vec<Connection>) -> Arc<Self> {
         Arc::new(Self {
-            nodes: Mutex::new(vec![agent("a_p", "planner"), agent("a_c", "coder"), agent("a_r", "revisor")]),
+            nodes: Mutex::new(vec![
+                agent("a_p", "planner"),
+                agent("a_c", "coder"),
+                agent("a_r", "revisor"),
+            ]),
             conns: Mutex::new(conns),
             exited: Mutex::new(vec![]),
             written: Mutex::new(vec![]),
@@ -87,14 +91,23 @@ impl Host for FakeHost {
         })
     }
     fn write(&self, node_id: &str, data: &[u8]) -> Result<(), String> {
-        self.written.lock().unwrap().push((node_id.into(), data.to_vec()));
+        self.written
+            .lock()
+            .unwrap()
+            .push((node_id.into(), data.to_vec()));
         Ok(())
     }
     fn screen_text(&self, node_id: &str, _lines: usize) -> Result<String, String> {
         Ok(format!("tela de {node_id}"))
     }
     fn set_connection_state(&self, conn_id: &str, state: ConnState, reason: Option<PauseReason>) {
-        for c in self.conns.lock().unwrap().iter_mut().filter(|c| c.id == conn_id) {
+        for c in self
+            .conns
+            .lock()
+            .unwrap()
+            .iter_mut()
+            .filter(|c| c.id == conn_id)
+        {
             c.state = state;
             c.pause_reason = reason;
         }

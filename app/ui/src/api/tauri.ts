@@ -5,6 +5,10 @@ import type {
   Agent,
   AgentStatusEvent,
   AttachInfo,
+  Connection,
+  Direction,
+  HistoryEntry,
+  LinkMessageEvent,
   NewAgent,
   Profile,
   RecentEntry,
@@ -30,6 +34,16 @@ export const api = {
   agentDuplicate: (id: string) => invoke<Agent>("agent_duplicate", { id }),
   nodeDelete: (id: string) => invoke<null>("node_delete", { id }),
 
+  connectionCreate: (from: string, to: string, direction: Direction = "forward") =>
+    invoke<Connection>("connection_create", { req: { from, to, direction } }),
+  connectionSetDirection: (id: string, direction: Direction) =>
+    invoke<Connection>("connection_set_direction", { id, direction }),
+  connectionPause: (id: string) => invoke<Connection>("connection_pause", { id }),
+  connectionResume: (id: string) => invoke<Connection>("connection_resume", { id }),
+  connectionDelete: (id: string) => invoke<null>("connection_delete", { id }),
+  connectionHistory: (id: string, limit = 200) =>
+    invoke<HistoryEntry[]>("connection_history", { id, limit }),
+
   sessionAttach: (agentId: string, onBytes: (bytes: Uint8Array) => void) => {
     const output = new Channel<ArrayBuffer>();
     output.onmessage = (buf) => onBytes(new Uint8Array(buf));
@@ -50,6 +64,10 @@ export const api = {
 export const events = {
   agentStatus: (cb: (e: AgentStatusEvent) => void): Promise<UnlistenFn> =>
     listen<AgentStatusEvent>("agent-status", (e) => cb(e.payload)),
+  connectionChanged: (cb: (c: Connection) => void): Promise<UnlistenFn> =>
+    listen<Connection>("connection-changed", (e) => cb(e.payload)),
+  linkMessage: (cb: (e: LinkMessageEvent) => void): Promise<UnlistenFn> =>
+    listen<LinkMessageEvent>("link-message", (e) => cb(e.payload)),
   agentSession: (cb: (agentId: string) => void): Promise<UnlistenFn> =>
     listen<string>("agent-session", (e) => cb(e.payload)),
 };

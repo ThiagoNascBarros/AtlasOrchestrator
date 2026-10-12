@@ -7,6 +7,8 @@ import type {
   Agent,
   AgentStatusValue,
   CanvasNode,
+  Connection,
+  Direction,
   NewAgent,
   Rect,
   Viewport,
@@ -24,6 +26,13 @@ export type HistoryCmd =
   | { kind: "create"; node: Agent }
   | { kind: "delete"; node: Agent };
 
+/** Mensagem passando por uma conexão (animação da linha). */
+export interface Pulse {
+  key: number;
+  connId: string;
+  fromId: string;
+}
+
 export interface AgentStatus {
   value: AgentStatusValue;
   code?: number | null;
@@ -34,6 +43,15 @@ const HISTORY_LIMIT = 200;
 interface UiState {
   root: string | null;
   nodes: CanvasNode[];
+  connections: Connection[];
+  pulses: Pulse[];
+  /** Linha sendo arrastada de um agente para outro (coordenadas do mundo). */
+  draft: { fromId: string; x: number; y: number } | null;
+  /** Conexão com o menu aberto e conexão com o histórico aberto. */
+  menuConn: string | null;
+  historyConn: string | null;
+  /** Sobe a cada mensagem; o painel de histórico recarrega. */
+  msgTick: number;
   wsName: string;
   viewport: Viewport;
   focus: FocusState;
@@ -55,6 +73,16 @@ interface UiState {
   deleteNodes(ids: string[]): Promise<void>;
   undo(): Promise<void>;
   redo(): Promise<void>;
+  upsertConnection(c: Connection): void;
+  connect(fromId: string, toId: string): Promise<void>;
+  setDirection(id: string, d: Direction): Promise<void>;
+  pauseConnection(id: string): Promise<void>;
+  resumeConnection(id: string): Promise<void>;
+  deleteConnection(id: string): Promise<void>;
+  setDraft(d: { fromId: string; x: number; y: number } | null): void;
+  selectConnection(id: string | null): void;
+  openHistory(id: string | null): void;
+  addPulse(connId: string, fromId: string): void;
   setStatus(agentId: string, status: AgentStatus): void;
   bumpSession(agentId: string): void;
   toggleGrid(): void;
@@ -62,6 +90,7 @@ interface UiState {
   setError(msg: string | null): void;
 }
 
+let pulseKey = 0;
 let viewportTimer: ReturnType<typeof setTimeout> | undefined;
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : String(e));
@@ -98,6 +127,12 @@ function remapHistory(list: HistoryCmd[], from: string, to: Agent): HistoryCmd[]
 export const useUi = create<UiState>((set, get) => ({
   root: null,
   nodes: [],
+  connections: [],
+  pulses: [],
+  draft: null,
+  menuConn: null,
+  historyConn: null,
+  msgTick: 0,
   wsName: "",
   viewport: { x: 0, y: 0, zoom: 1 },
   focus: initialFocus,
@@ -113,6 +148,11 @@ export const useUi = create<UiState>((set, get) => ({
     set({
       root: view.root,
       nodes: view.workspace.nodes,
+      connections: view.workspace.connections ?? [],
+      pulses: [],
+      draft: null,
+      menuConn: null,
+      historyConn: null,
       wsName: view.workspace.name,
       viewport: view.workspace.viewport,
       focus: initialFocus,
@@ -120,7 +160,19 @@ export const useUi = create<UiState>((set, get) => ({
       future: [],
     }),
 
-  unload: () => set({ root: null, nodes: [], statuses: {}, sessionGen: {}, past: [], future: [] }),
+  unload: () =>
+    set({
+      root: null,
+      nodes: [],
+      connections: [],
+      menuConn: null,
+      historyConn: null,
+      draft: null,
+      statuses: {},
+      sessionGen: {},
+      past: [],
+      future: [],
+    }),
 
   setViewport: (v) => {
     set({ viewport: v });
@@ -165,6 +217,7 @@ export const useUi = create<UiState>((set, get) => ({
     }
     set((s) => ({
       nodes: s.nodes.filter((n) => !ids.includes(n.id)),
+      connections: s.connections.filter((c) => !ids.includes(c.from) && !ids.includes(c.to)),
       past: [
         ...s.past,
         ...victims
@@ -189,6 +242,7 @@ export const useUi = create<UiState>((set, get) => ({
         get().dispatchFocus({ type: "node_removed", id: cmd.node.id });
         set((s) => ({
           nodes: s.nodes.filter((n) => n.id !== cmd.node.id),
+          connections: s.connections.filter((c) => c.from !== cmd.node.id && c.to !== cmd.node.id),
           future: [...s.future, cmd],
         }));
       } else {
@@ -218,6 +272,7 @@ export const useUi = create<UiState>((set, get) => ({
         get().dispatchFocus({ type: "node_removed", id: cmd.node.id });
         set((s) => ({
           nodes: s.nodes.filter((n) => n.id !== cmd.node.id),
+          connections: s.connections.filter((c) => c.from !== cmd.node.id && c.to !== cmd.node.id),
           past: [...s.past, cmd],
         }));
       } else {
@@ -231,6 +286,68 @@ export const useUi = create<UiState>((set, get) => ({
     } catch (e) {
       set({ error: errorText(e) });
     }
+  },
+
+  upsertConnection: (c) =>
+    set((s) => ({
+      connections: s.connections.some((x) => x.id === c.id)
+        ? s.connections.map((x) => (x.id === c.id ? c : x))
+        : [...s.connections, c],
+    })),
+
+  connect: async (fromId, toId) => {
+    try {
+      get().upsertConnection(await api.connectionCreate(fromId, toId));
+    } catch (e) {
+      set({ error: errorText(e) });
+    }
+  },
+
+  setDirection: async (id, d) => {
+    try {
+      get().upsertConnection(await api.connectionSetDirection(id, d));
+    } catch (e) {
+      set({ error: errorText(e) });
+    }
+  },
+
+  pauseConnection: async (id) => {
+    try {
+      get().upsertConnection(await api.connectionPause(id));
+    } catch (e) {
+      set({ error: errorText(e) });
+    }
+  },
+
+  resumeConnection: async (id) => {
+    try {
+      get().upsertConnection(await api.connectionResume(id));
+    } catch (e) {
+      set({ error: errorText(e) });
+    }
+  },
+
+  deleteConnection: async (id) => {
+    try {
+      await api.connectionDelete(id);
+      set((s) => ({
+        connections: s.connections.filter((c) => c.id !== id),
+        menuConn: s.menuConn === id ? null : s.menuConn,
+        historyConn: s.historyConn === id ? null : s.historyConn,
+      }));
+    } catch (e) {
+      set({ error: errorText(e) });
+    }
+  },
+
+  setDraft: (draft) => set({ draft }),
+  selectConnection: (id) => set({ menuConn: id }),
+  openHistory: (id) => set({ historyConn: id, menuConn: null }),
+
+  addPulse: (connId, fromId) => {
+    const key = ++pulseKey;
+    set((s) => ({ pulses: [...s.pulses, { key, connId, fromId }], msgTick: s.msgTick + 1 }));
+    setTimeout(() => set((s) => ({ pulses: s.pulses.filter((p) => p.key !== key) })), 1100);
   },
 
   setStatus: (agentId, status) => set((s) => ({ statuses: { ...s.statuses, [agentId]: status } })),

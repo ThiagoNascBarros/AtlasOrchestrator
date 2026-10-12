@@ -82,7 +82,9 @@ pub fn connection_create(
             .iter()
             .any(|c| atlasoq_link::acl::links(c, &req.from, &req.to))
         {
-            return Err("esses nós já estão conectados; mude a direção da conexão existente".to_owned());
+            return Err(
+                "esses nós já estão conectados; mude a direção da conexão existente".to_owned(),
+            );
         }
         let conn = Connection {
             id: new_id(IdKind::Connection),

@@ -1,6 +1,7 @@
 // Canvas infinito: pan, zoom centrado no cursor, seleção por retângulo, grade e nós.
 import { useEffect, useRef, useState } from "react";
 import { canvasKeysActive, selectedIds } from "../focus/focusMachine";
+import { ConnectionLayer, ConnectionMenu } from "../connections/ConnectionLayer";
 import { AgentNode } from "../nodes/AgentNode";
 import { useUi } from "../store";
 import { GRID } from "./NodeFrame";
@@ -149,6 +150,7 @@ export function Viewport() {
 
   const onPointerDown = (e: React.PointerEvent) => {
     const p = local(e);
+    if (e.button === 0) useUi.getState().selectConnection(null);
     if (e.button === 1 || (e.button === 0 && space.current)) {
       e.preventDefault();
       setGesture({ kind: "pan", last: p });
@@ -220,6 +222,7 @@ export function Viewport() {
         className="world"
         style={{ transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})` }}
       >
+        <ConnectionLayer />
         {nodes.map((n) =>
           n.kind === "agent" ? (
             <AgentNode
@@ -239,6 +242,7 @@ export function Viewport() {
           })()}
         />
       )}
+      <ConnectionMenu viewport={viewport} />
       <Minimap size={size} />
     </div>
   );

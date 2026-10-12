@@ -1,6 +1,8 @@
 //! Sugestão de comando por distância de edição.
 
-pub const COMMANDS: [&str; 8] = ["learn", "list", "send", "read", "ask", "reply", "note", "help"];
+pub const COMMANDS: [&str; 8] = [
+    "learn", "list", "send", "read", "ask", "reply", "note", "help",
+];
 
 /// Comando válido mais próximo (distância ≤ 2), se houver.
 pub fn closest(word: &str) -> Option<&'static str> {

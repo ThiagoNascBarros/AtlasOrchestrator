@@ -67,13 +67,12 @@ pub fn overview() -> String {
     for c in &COMMANDS {
         out.push_str(&format!("  {:<6} {}\n", c.name, c.summary));
     }
-    out.push_str("\nUse --json em qualquer comando para saída em JSON.\nDetalhes: atlasoq help <comando>\n");
+    out.push_str(
+        "\nUse --json em qualquer comando para saída em JSON.\nDetalhes: atlasoq help <comando>\n",
+    );
     out
 }
 
 pub fn detail(c: &Command) -> String {
-    format!(
-        "uso: {}\n{}\nexemplo: {}\n",
-        c.usage, c.summary, c.example
-    )
+    format!("uso: {}\n{}\nexemplo: {}\n", c.usage, c.summary, c.example)
 }
