@@ -1,8 +1,16 @@
-# Dependências e builds (a definir conforme a stack escolhida no SPEC.md)
-node_modules/
+# Rust
 target/
-dist/
-build/
+**/*.rs.bk
+
+# UI e ferramentas Node
+node_modules/
+app/ui/dist/
+app/ui/coverage/
+app/ui/licenses.json
+*.log
+
+# Tauri
+app/src-tauri/gen/
 
 # Estado local do Claude Code
 .claude/settings.local.json
@@ -11,4 +19,6 @@ build/
 .idea/
 .vscode/
 *.swp
+*.tmp
 .DS_Store
+.env*

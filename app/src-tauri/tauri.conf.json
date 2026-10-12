@@ -1,0 +1,47 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "AtlasOQ",
+  "mainBinaryName": "atlasoq-desktop",
+  "version": "0.1.0",
+  "identifier": "org.atlasoq.AtlasOQ",
+  "build": {
+    "beforeDevCommand": "pnpm -C ui dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm -C ui build",
+    "frontendDist": "../ui/dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "AtlasOQ",
+        "width": 1400,
+        "height": 900,
+        "minWidth": 800,
+        "minHeight": 500
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src ipc: http://ipc.localhost"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["deb"],
+    "category": "DeveloperTool",
+    "shortDescription": "Canvas infinito para orquestrar agentes de IA",
+    "longDescription": "AtlasOQ coloca cada agente de IA num terminal real dentro de um canvas infinito, ao lado de notas, e permite que agentes conectados conversem pela CLI atlasoq.",
+    "license": "Apache-2.0",
+    "licenseFile": "../../LICENSE",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.png"
+    ],
+    "linux": {
+      "deb": {
+        "depends": ["libwebkit2gtk-4.1-0", "libgtk-3-0"]
+      }
+    }
+  }
+}
