@@ -8,5 +8,11 @@ authors.workspace = true
 publish = false
 
 [dependencies]
+atlasoq-core.workspace = true
+atlasoq-store.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+libc.workspace = true
 
 [dev-dependencies]
+tempfile.workspace = true
