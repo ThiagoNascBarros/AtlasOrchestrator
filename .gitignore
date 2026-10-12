@@ -1,0 +1,14 @@
+# Dependências e builds (a definir conforme a stack escolhida no SPEC.md)
+node_modules/
+target/
+dist/
+build/
+
+# Estado local do Claude Code
+.claude/settings.local.json
+
+# Editores e sistema
+.idea/
+.vscode/
+*.swp
+.DS_Store
