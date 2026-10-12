@@ -35,17 +35,17 @@ e teste por modo de hook (FR-030), sanitização (SC-006), encerramento forçado
 
 - [ ] T001 Instalar e documentar pré-requisitos de desenvolvimento (rustup estável, Node 24, pnpm, `libwebkit2gtk-4.1-dev`, `libgtk-3-dev`, `build-essential`, `pkg-config`) em docs/desenvolvimento.md
 - [ ] T002 Criar o workspace Cargo com os membros `crates/atlasoq-core`, `crates/atlasoq-pty`, `crates/atlasoq-store`, `crates/atlasoq-link`, `crates/atlasoq-cli`, `app/src-tauri` em Cargo.toml (edição 2021, `rust-version` fixado, `license = "Apache-2.0"`)
-- [ ] T003 [P] Criar os cinco crates vazios com `lib.rs`/`main.rs` e `Cargo.toml` em crates/atlasoq-core/, crates/atlasoq-pty/, crates/atlasoq-store/, crates/atlasoq-link/, crates/atlasoq-cli/ (binário `atlasoq`)
+- [X] T003 [P] Criar os cinco crates vazios com `lib.rs`/`main.rs` e `Cargo.toml` em crates/atlasoq-core/, crates/atlasoq-pty/, crates/atlasoq-store/, crates/atlasoq-link/, crates/atlasoq-cli/ (binário `atlasoq`)
 - [ ] T004 Inicializar o app Tauri v2 com binário `atlasoq-desktop`, identificador e nome "AtlasOQ" em app/src-tauri/Cargo.toml e app/src-tauri/tauri.conf.json
-- [ ] T005 [P] Inicializar a UI com Vite + React 18 + TypeScript strict + Zustand + Vitest via pnpm em app/ui/package.json, app/ui/tsconfig.json e app/ui/vite.config.ts
-- [ ] T006 [P] Configurar rustfmt, clippy (`-D warnings`) e EditorConfig em rustfmt.toml, .cargo/config.toml e .editorconfig
-- [ ] T007 [P] Configurar ESLint e Prettier para a UI em app/ui/eslint.config.js e app/ui/.prettierrc
-- [ ] T008 [P] Configurar `cargo-deny` (licenças compatíveis com Apache-2.0, advisories) em deny.toml e verificação de licenças npm em app/ui/package.json (script `licenses`)
-- [ ] T009 Criar o pipeline de CI (fmt, clippy, `cargo test --workspace`, `cargo deny check`, `pnpm -C app/ui lint test`, build do app) em .github/workflows/ci.yml
-- [ ] T010 [P] Atualizar .gitignore da raiz para `target/`, `app/ui/node_modules/`, `app/ui/dist/` e manter `.specify/feature.json` ignorado em .gitignore
-- [ ] T011 [P] Escrever ADR-001 (stack Tauri v2 + xterm.js + portable-pty, plano B Electron) em docs/adr/001-stack.md
-- [ ] T012 [P] Escrever ADR-002 (conexões com direção, broker, sanitização, ask/reply, limites) em docs/adr/002-conexoes.md
-- [ ] T013 [P] Escrever ADR-003 (diretório `.atlasoq/`, hook de aprendizado em 4 modos, memória, confiança) em docs/adr/003-atlasoq-dir-e-hooks.md
+- [X] T005 [P] Inicializar a UI com Vite + React 18 + TypeScript strict + Zustand + Vitest via pnpm em app/ui/package.json, app/ui/tsconfig.json e app/ui/vite.config.ts
+- [X] T006 [P] Configurar rustfmt, clippy (`-D warnings`) e EditorConfig em rustfmt.toml, .cargo/config.toml e .editorconfig
+- [X] T007 [P] Configurar ESLint e Prettier para a UI em app/ui/eslint.config.js e app/ui/.prettierrc
+- [X] T008 [P] Configurar `cargo-deny` (licenças compatíveis com Apache-2.0, advisories) em deny.toml e verificação de licenças npm em app/ui/package.json (script `licenses`)
+- [X] T009 Criar o pipeline de CI (fmt, clippy, `cargo test --workspace`, `cargo deny check`, `pnpm -C app/ui lint test`, build do app) em .github/workflows/ci.yml
+- [X] T010 [P] Atualizar .gitignore da raiz para `target/`, `app/ui/node_modules/`, `app/ui/dist/` e manter `.specify/feature.json` ignorado em .gitignore
+- [X] T011 [P] Escrever ADR-001 (stack Tauri v2 + xterm.js + portable-pty, plano B Electron) em docs/adr/001-stack.md
+- [X] T012 [P] Escrever ADR-002 (conexões com direção, broker, sanitização, ask/reply, limites) em docs/adr/002-conexoes.md
+- [X] T013 [P] Escrever ADR-003 (diretório `.atlasoq/`, hook de aprendizado em 4 modos, memória, confiança) em docs/adr/003-atlasoq-dir-e-hooks.md
 - [ ] T014 Spike R3: 12 xterm.js ligados a PTYs reais num mundo com pan/zoom, estratégia de fonte por zoom e LOD; medir nitidez, seleção em 25/50/100/200%, fps e tela branca em GNOME/Wayland, KDE/Wayland e X11; registrar resultado e decisão (aprovar Tauri ou acionar plano B) em docs/spikes/r3-zoom.md
 - [ ] T015 [P] Spike R4/R5: confirmar que `claude --settings <arquivo>` carrega hook `SessionStart` cuja saída entra no contexto, a sintaxe de `permissions.allow` para `Bash(atlasoq:*)`, e as flags de prompt inicial de `codex`, `gemini --prompt-interactive` e `opencode --prompt`; registrar a tabela final de modos por CLI em docs/spikes/r4-hooks-clis.md
 - [ ] T016 [P] Spike R13: gerar `.deb` mínimo com `atlasoq-desktop` e o binário `atlasoq` via `externalBin`; confirmar instalação em `/usr/bin/atlasoq` e dependências `libwebkit2gtk-4.1-0`, `libgtk-3-0`; registrar em docs/spikes/r13-deb.md
