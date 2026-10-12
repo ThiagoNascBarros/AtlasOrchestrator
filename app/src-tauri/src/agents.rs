@@ -5,10 +5,11 @@ use std::sync::Arc;
 use atlasoq_pty::{LocalSessionHost, SessionEvent, SessionHost, SessionId, SessionSpec};
 use atlasoq_store::Agent;
 use serde::Serialize;
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
 
 use crate::commands::session::{to_event, StatusEvent};
-use crate::state::OpenWorkspace;
+use crate::broker::cli_dir;
+use crate::state::{AppState, OpenWorkspace};
 
 /// Evento global com o status de um agente (cartões e barras de título usam).
 pub const EVENT_AGENT_STATUS: &str = "agent-status";
@@ -46,7 +47,22 @@ pub fn launch(
     open: &mut OpenWorkspace,
     agent: &Agent,
 ) -> Result<SessionId, String> {
-    let spec = session_spec(open, agent);
+    let mut spec = session_spec(open, agent);
+    let state = app.state::<AppState>();
+    let broker = state.broker();
+    // Cada sessão nasce com token novo; o do processo anterior deixa de valer.
+    if let Some(socket) = state.socket_path() {
+        spec.env.push(("ATLASOQ_SOCKET".into(), socket.display().to_string()));
+        spec.env.push(("ATLASOQ_NODE_ID".into(), agent.id.clone()));
+        spec.env
+            .push(("ATLASOQ_NODE_TOKEN".into(), broker.issue_token(&agent.id)));
+    }
+    if let Some(dir) = cli_dir() {
+        let old = std::env::var("PATH").unwrap_or_default();
+        spec.env
+            .push(("PATH".into(), format!("{}:{old}", dir.display())));
+    }
+    broker.node_stopped(&agent.id);
     let id = host
         .spawn(spec)
         .map_err(|e| format!("não foi possível iniciar \"{}\": {e}", agent.name))?;
@@ -54,6 +70,8 @@ pub fn launch(
 
     let rx = host.subscribe(id).map_err(|e| e.to_string())?;
     let (app, agent_id) = (app.clone(), agent.id.clone());
+    let exit_broker = broker.clone();
+    let node_id = agent.id.clone();
     let emit = move |status: StatusEvent| {
         let _ = app.emit(
             EVENT_AGENT_STATUS,
@@ -72,6 +90,7 @@ pub fn launch(
                 match ev {
                     SessionEvent::Status(a) => emit(to_event(a)),
                     SessionEvent::Exited(code) => {
+                        exit_broker.node_stopped(&node_id);
                         emit(StatusEvent::Exited { code });
                         break;
                     }

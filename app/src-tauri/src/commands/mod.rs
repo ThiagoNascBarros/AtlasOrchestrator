@@ -1,4 +1,5 @@
 pub mod agent;
+pub mod connection;
 pub mod open;
 pub mod session;
 pub mod workspace;

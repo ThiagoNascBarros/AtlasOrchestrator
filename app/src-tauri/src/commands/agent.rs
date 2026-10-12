@@ -198,6 +198,15 @@ pub fn agent_duplicate(
 /// Apaga um nó (agente ou nota) e as conexões dele. Agentes são encerrados.
 #[tauri::command]
 pub fn node_delete(state: State<'_, AppState>, id: String) -> Result<(), String> {
+    let removed: Vec<String> = state.with_ws(|open| {
+        Ok(open
+            .ws
+            .connections
+            .iter()
+            .filter(|c| c.from == id || c.to == id)
+            .map(|c| c.id.clone())
+            .collect())
+    })?;
     let sid = state.with_ws(|open| {
         let before = open.ws.nodes.len();
         open.ws.nodes.retain(|n| n.id() != id);
@@ -208,6 +217,16 @@ pub fn node_delete(state: State<'_, AppState>, id: String) -> Result<(), String>
         open.touch();
         Ok(open.sessions.remove(&id))
     })?;
+    let broker = state.broker();
+    for conn in &removed {
+        broker.connection_stopped(
+            conn,
+            atlasoq_core::ErrorKind::NoConnection,
+            "a conexão foi apagada junto com o agente.",
+        );
+    }
+    broker.node_stopped(&id);
+    broker.revoke_token(&id);
     if let Some(sid) = sid {
         let host = state.host.clone();
         std::thread::spawn(move || host.kill(sid, KILL_GRACE));

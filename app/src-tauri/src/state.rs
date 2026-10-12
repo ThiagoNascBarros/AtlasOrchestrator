@@ -3,9 +3,10 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::{Arc, Mutex, MutexGuard, OnceLock};
 use std::time::Duration;
 
+use atlasoq_link::{Broker, Server};
 use atlasoq_pty::{LocalSessionHost, SessionHost, SessionId};
 use atlasoq_store::autosave::Autosaver;
 use atlasoq_store::{Workspace, WorkspaceDir};
@@ -56,6 +57,8 @@ pub struct AppState {
     /// Terminais montados na UI: id da conexão → sinal de parada.
     attachments: Mutex<HashMap<u64, Arc<AtomicBool>>>,
     next_attachment: AtomicU64,
+    broker: OnceLock<Arc<Broker>>,
+    server: Mutex<Option<Server>>,
 }
 
 impl Default for AppState {
@@ -65,11 +68,28 @@ impl Default for AppState {
             open: Mutex::new(None),
             attachments: Mutex::new(HashMap::new()),
             next_attachment: AtomicU64::new(1),
+            broker: OnceLock::new(),
+            server: Mutex::new(None),
         }
     }
 }
 
 impl AppState {
+    pub fn set_broker(&self, broker: Arc<Broker>, server: Server) {
+        let _ = self.broker.set(broker);
+        *self.server.lock().unwrap() = Some(server);
+    }
+
+    /// Broker de conexões entre agentes (iniciado no `setup` do app).
+    pub fn broker(&self) -> Arc<Broker> {
+        self.broker.get().expect("broker não iniciado").clone()
+    }
+
+    /// Caminho do socket do atlasoq, injetado nos agentes.
+    pub fn socket_path(&self) -> Option<std::path::PathBuf> {
+        self.server.lock().unwrap().as_ref().map(|s| s.path().to_path_buf())
+    }
+
     /// Registra um terminal montado e devolve (id, sinal de parada).
     pub fn new_attachment(&self) -> (u64, Arc<AtomicBool>) {
         let id = self.next_attachment.fetch_add(1, Ordering::SeqCst);
@@ -121,6 +141,10 @@ impl AppState {
 
     /// Fechamento do app.
     pub fn shutdown(&self) {
+        if let Some(b) = self.broker.get() {
+            b.shutdown();
+        }
+        self.server.lock().unwrap().take();
         if let Some(open) = self.workspace().as_ref() {
             open.autosave.flush();
         }
