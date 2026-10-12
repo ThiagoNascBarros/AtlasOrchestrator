@@ -534,8 +534,8 @@ diária e retenção configurável. O painel da conexão lê esse log.
   | Modo | Como funciona | Uso |
   |---|---|---|
   | `hook` | O app gera em `.atlasoq/agents/<nome>/` a configuração do hook de início de sessão da própria CLI, executando `atlasoq learn`, e passa esse arquivo à CLI por flag ou variável de ambiente. A saída entra no contexto do agente sem gastar um turno | CLIs com hooks de sessão configuráveis sem tocar no projeto (Claude Code via `--settings`; demais a confirmar no plano) |
-  | `prompt` | O app inicia a CLI com um prompt inicial: "Você é `<nome>` no AtlasOQ. Rode `atlasoq learn` agora e siga as instruções." | CLIs que aceitam prompt inicial como argumento |
-  | `type` | O app espera o agente ficar pronto (primeira ociosidade após o início) e envia a mesma instrução pelo caminho normal de entrega | Fallback universal |
+  | `prompt` | O app inicia a CLI com o tutorial e a memória embutidos como prompt inicial (não pede para rodar comando, o que dispararia pedido de permissão) | Codex, Gemini CLI, OpenCode (ver research.md R4) |
+  | `type` | O app espera o agente ficar pronto (primeira ociosidade após o início) e envia o mesmo conteúdo pelo caminho normal de entrega | Aider; fallback universal |
   | `off` | Nada | Perfil "Shell" |
 
   O hook roda ao criar o agente, ao reiniciá-lo e ao reabrir o workspace. O nó mostra

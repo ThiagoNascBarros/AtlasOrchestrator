@@ -464,10 +464,14 @@ rodar `atlasoq list`; depois desinstalar.
   usuário. O hook MUST rodar de novo quando o agente é reiniciado e quando o workspace é reaberto.
   NÃO MUST existir passo manual (botão ou comando do usuário) necessário para o agente aprender.
 - **FR-028a**: O hook MUST suportar estes modos, escolhidos por perfil: `hook` (usa o mecanismo de
-  início de sessão da própria CLI, com arquivos gerados em `.atlasoq/`), `prompt` (passa à CLI um
-  prompt inicial pedindo para rodar `atlasoq learn`), `type` (envia essa instrução ao agente assim
-  que ele fica pronto) e `off`. Os perfis prontos MUST vir com o modo mais adequado a cada CLI, e
-  "Shell" com `off`.
+  início de sessão da própria CLI, com arquivos gerados em `.atlasoq/`), `prompt` (passa à CLI, como prompt
+  inicial, o próprio conteúdo do tutorial e da memória), `type` (envia esse mesmo conteúdo ao agente
+  assim que ele fica pronto) e `off`. Nos modos `prompt` e `type`, o conteúdo MUST ir embutido, e
+  não como pedido para o agente executar um comando, para não disparar pedidos de permissão da CLI
+  do agente. Os perfis prontos MUST vir com o modo mais adequado a cada CLI, e "Shell" com `off`.
+- **FR-028e**: Quando a CLI do agente permitir configurar permissões por arquivo dentro de
+  `.atlasoq/` (ex.: Claude Code), o app MUST liberar ali apenas a execução de `atlasoq`, para que o
+  uso da CLI não exija aprovação manual; para as demais, o guia MUST explicar como liberar.
 - **FR-028b**: O nó MUST mostrar o estado do aprendizado (aguardando, concluído, falhou com motivo)
   e o resultado MUST ir para o log do workspace.
 - **FR-028c**: O conteúdo de `.atlasoq/learn.md`, se existir, MUST ser anexado ao tutorial, com
