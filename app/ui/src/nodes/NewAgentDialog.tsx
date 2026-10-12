@@ -1,4 +1,5 @@
-// Diálogo "novo agente": perfil, nome único, papel, diretório e variáveis.
+// Diálogo "novo agente": CLI (claude ou codex), nome único, papel e diretório. Sem chave de API:
+// o login é feito pela própria CLI, no navegador.
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../api/tauri";
 import type { Profile } from "../api/types";
@@ -20,15 +21,6 @@ export function validateName(name: string, taken: string[]): string | null {
   return null;
 }
 
-export function parseEnv(text: string): Record<string, string> {
-  const env: Record<string, string> = {};
-  for (const line of text.split("\n")) {
-    const i = line.indexOf("=");
-    if (i > 0) env[line.slice(0, i).trim()] = line.slice(i + 1).trim();
-  }
-  return env;
-}
-
 export function NewAgentDialog() {
   const at = useUi((s) => s.newAgentAt);
   // Montado só quando aberto: o estado do formulário recomeça a cada abertura.
@@ -42,8 +34,6 @@ function NewAgentForm({ at }: { at: { x: number; y: number } }) {
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [cwd, setCwd] = useState(".");
-  const [env, setEnv] = useState("");
-  const [secrets, setSecrets] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -69,11 +59,8 @@ function NewAgentForm({ at }: { at: { x: number; y: number } }) {
         name,
         role,
         cwd,
-        env: parseEnv(env),
-        env_secret_keys: secrets
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean),
+        env: {},
+        env_secret_keys: [],
         x: Math.round(at.x - 360),
         y: Math.round(at.y - 230),
       });
@@ -99,6 +86,7 @@ function NewAgentForm({ at }: { at: { x: number; y: number } }) {
               </option>
             ))}
           </select>
+          <small>{t.newAgent.loginHint}</small>
         </label>
         <label>
           {t.newAgent.name}
@@ -125,23 +113,6 @@ function NewAgentForm({ at }: { at: { x: number; y: number } }) {
         <label>
           {t.newAgent.cwd}
           <input value={cwd} onChange={(e) => setCwd(e.target.value)} />
-        </label>
-        <label>
-          {t.newAgent.env}
-          <textarea
-            rows={3}
-            value={env}
-            onChange={(e) => setEnv(e.target.value)}
-            placeholder="FOO=bar"
-          />
-        </label>
-        <label>
-          {t.newAgent.secrets}
-          <input
-            value={secrets}
-            onChange={(e) => setSecrets(e.target.value)}
-            placeholder="ANTHROPIC_API_KEY"
-          />
         </label>
         {error && <p className="field-error">{error}</p>}
         <div className="dialog-actions">

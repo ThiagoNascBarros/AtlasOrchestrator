@@ -48,21 +48,12 @@ fn builtin(name: &str, command: &str, mode: LearnMode, prompt_flag: Option<&str>
     }
 }
 
-/// Perfis prontos (docs/spikes/r4-hooks-clis.md).
+/// Perfis prontos (docs/spikes/r4-hooks-clis.md): só `claude` e `codex`. Nenhum pede chave de
+/// API; o usuário entra pela própria CLI, no navegador.
 pub fn builtins() -> Vec<Profile> {
-    let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/bash".to_owned());
     vec![
         builtin("claude-code", "claude", LearnMode::Hook, None),
         builtin("codex", "codex", LearnMode::Prompt, None),
-        builtin(
-            "gemini",
-            "gemini",
-            LearnMode::Prompt,
-            Some("--prompt-interactive"),
-        ),
-        builtin("opencode", "opencode", LearnMode::Prompt, Some("--prompt")),
-        builtin("aider", "aider", LearnMode::Type, None),
-        builtin("shell", &shell, LearnMode::Off, None),
     ]
 }
 
@@ -114,12 +105,9 @@ mod tests {
     fn prontos_tem_os_modos_da_pesquisa() {
         let all = builtins();
         let mode = |n: &str| all.iter().find(|p| p.name == n).unwrap().learn.mode;
+        assert_eq!(all.len(), 2);
         assert_eq!(mode("claude-code"), LearnMode::Hook);
         assert_eq!(mode("codex"), LearnMode::Prompt);
-        assert_eq!(mode("gemini"), LearnMode::Prompt);
-        assert_eq!(mode("opencode"), LearnMode::Prompt);
-        assert_eq!(mode("aider"), LearnMode::Type);
-        assert_eq!(mode("shell"), LearnMode::Off);
     }
 
     #[test]
@@ -148,6 +136,6 @@ mod tests {
         assert!(all.iter().any(|p| p.name == "revisor"));
         assert!(all
             .iter()
-            .any(|p| p.name == "shell" && p.scope == ProfileScope::Builtin));
+            .any(|p| p.name == "claude-code" && p.scope == ProfileScope::Builtin));
     }
 }

@@ -39,14 +39,13 @@ export const t = {
   },
   newAgent: {
     title: "Novo agente",
-    profile: "Perfil",
+    profile: "CLI",
+    loginHint: "sem chave de API: na primeira execução a CLI abre o navegador para você entrar",
     name: "Nome",
     nameHint: "letras minúsculas, números e hífen (ex.: coder)",
     role: "Papel (opcional)",
     rolePlaceholder: "ex.: implementa as tarefas",
     cwd: "Diretório (relativo à pasta do workspace)",
-    env: "Variáveis de ambiente (uma por linha, NOME=valor)",
-    secrets: "Variáveis secretas (nomes separados por vírgula; o valor nunca é salvo)",
     create: "Criar agente",
   },
   focus: {

@@ -27,6 +27,8 @@ const THEME = {
   selectionBackground: "#2f4a6b",
 };
 
+const USE_WEBGL = !/Linux/.test(navigator.userAgent);
+
 export function TerminalView({ agentId, width, height, focused }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const term = useRef<XTerm | null>(null);
@@ -62,12 +64,16 @@ export function TerminalView({ agentId, width, height, focused }: Props) {
     xterm.loadAddon(new WebLinksAddon((_e, url) => void api.openUrl(url).catch(() => undefined)));
     xterm.registerLinkProvider(pathLinkProvider(xterm, agentId));
     xterm.open(el);
-    try {
-      const webgl = new WebglAddon();
-      webgl.onContextLoss(() => webgl.dispose());
-      xterm.loadAddon(webgl);
-    } catch {
-      // Sem WebGL: o xterm usa o renderizador DOM.
+    // No WebKitGTK (webview do Tauri no Linux) o canvas WebGL do xterm fica em branco: os bytes
+    // chegam, mas nada é pintado. Lá usamos o renderizador DOM.
+    if (USE_WEBGL) {
+      try {
+        const webgl = new WebglAddon();
+        webgl.onContextLoss(() => webgl.dispose());
+        xterm.loadAddon(webgl);
+      } catch {
+        // Sem WebGL: o xterm usa o renderizador DOM.
+      }
     }
 
     xterm.attachCustomKeyEventHandler((ev) => {

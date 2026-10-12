@@ -67,12 +67,13 @@ fn notify_session(app: &AppHandle, agent_id: &str) {
     let _ = app.emit(EVENT_AGENT_SESSION, agent_id);
 }
 
+/// Devolve `Node` (e não `Agent`) para o JSON levar `kind: "agent"`, que a UI usa para desenhar o nó.
 #[tauri::command]
 pub fn agent_create(
     app: AppHandle,
     state: State<'_, AppState>,
     req: NewAgent,
-) -> Result<Agent, String> {
+) -> Result<Node, String> {
     let ws_profiles = state.workspace().as_ref().map(|o| o.dir.profiles_dir());
     let all = profiles::resolve(
         &paths::config_dir().join("profiles"),
@@ -130,7 +131,8 @@ pub fn agent_create(
         Ok(agent)
     })?;
     notify_session(&app, &agent.id);
-    Ok(agent)
+    // Como `Node`, para a UI receber o campo `kind` (sem ele o nó não é desenhado no canvas).
+    Ok(Node::Agent(agent))
 }
 
 #[tauri::command]
@@ -168,7 +170,7 @@ pub fn agent_duplicate(
     app: AppHandle,
     state: State<'_, AppState>,
     id: String,
-) -> Result<Agent, String> {
+) -> Result<Node, String> {
     let agent = state.with_ws(|open| {
         let src = find_agent(open, &id)?;
         let name =
@@ -189,7 +191,8 @@ pub fn agent_duplicate(
         Ok(agent)
     })?;
     notify_session(&app, &agent.id);
-    Ok(agent)
+    // Como `Node`, para a UI receber o campo `kind` (sem ele o nó não é desenhado no canvas).
+    Ok(Node::Agent(agent))
 }
 
 /// Apaga um nó (agente ou nota) e as conexões dele. Agentes são encerrados.
