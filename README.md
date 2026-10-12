@@ -1,29 +1,51 @@
-# AtlasOrchestrator
+# AtlasOQ
 
-Canvas infinito para agentes de código no Linux. Cada terminal é um nó posicionável no canvas, ao
-lado de notas e desenhos. Dois terminais podem ser conectados por uma linha para que os agentes
-conversem entre si via PTY.
+Canvas infinito para orquestrar agentes de IA no Linux. Cada agente (Claude Code, Codex, Gemini
+CLI, OpenCode, Aider ou um shell) roda num terminal real, representado por um nó no canvas, ao lado
+de notas em Markdown. Você liga dois agentes com uma linha, e eles passam a conversar pela CLI
+`atlasoq`, que os próprios agentes aprendem com `atlasoq learn`.
 
-> **Status:** fase de especificação. Ainda não há código. O SPEC.md precisa ser aprovado antes da
-> implementação (ver [constituição](.specify/memory/constitution.md), princípio VI).
+> **Status:** fase de especificação, sem código ainda. SPEC.md v0.2.0 aprovado (nome, stack e
+> empacotamento); a spec do MVP está em [specs/001](specs/001-mvp-orquestracao-agentes/spec.md).
 
 ## Sobre o projeto
 
-AtlasOrchestrator é um projeto open source, implementado do zero, inspirado no conceito de um
-"canvas infinito" para orquestrar vários agentes de código. Ele não copia nome, identidade visual
-nem código de nenhum aplicativo existente.
+AtlasOQ é um projeto open source, implementado do zero, inspirado no conceito de um "canvas
+infinito" para orquestrar vários agentes de código. Ele não copia nome, identidade visual nem
+código de nenhum aplicativo existente.
 
 ### Escopo do MVP
 
 - Canvas infinito com pan e zoom
-- Nós de terminal, cada um com um PTY real
-- Notas em Markdown
-- Conexões entre terminais (comunicação agente-a-agente, sempre com consentimento explícito)
+- Agentes em nós de terminal, cada um com um PTY real, nome, papel e status
+- Notas em Markdown, que podem ser ligadas a agentes como contexto compartilhado
+- Conexões entre agentes, sempre criadas pelo usuário, com direção, limites e auditoria
+- CLI `atlasoq` com 8 comandos e tutorial para agentes
 - Persistência local do workspace
+- Instalação por pacote `.deb`
+
+### A CLI dos agentes
+
+```
+atlasoq learn                    # tutorial para o agente
+atlasoq me                       # quem sou eu
+atlasoq list                     # com quem estou ligado
+atlasoq send coder "rode os testes"
+atlasoq read coder               # o que está na tela do coder
+atlasoq ask coder "quantos testes falharam?"
+atlasoq note plano               # lê a nota "plano"
+atlasoq note plano "feito: testes"
+atlasoq help
+```
+
+### Stack
+
+Tauri v2 (UI em TypeScript), xterm.js para os terminais e núcleo em Rust com `portable-pty`. Ver
+[SPEC.md](SPEC.md), seção 4.
 
 ### Princípios
 
-Resumo da [constituição](.specify/memory/constitution.md):
+Resumo da [constituição](.specify/memory/constitution.md) v1.1.0:
 
 1. Originalidade e licenciamento
 2. Linux primeiro (X11 e Wayland)
@@ -32,6 +54,8 @@ Resumo da [constituição](.specify/memory/constitution.md):
 5. Persistência local e legível
 6. Especificação antes da implementação
 7. Escopo de MVP
+8. CLI simples e memorável
+9. Agentes aprendem pela própria CLI
 
 ## Estrutura de pastas
 
@@ -47,33 +71,39 @@ AtlasOrchestrator/
 │   ├── scripts/              # Scripts do Spec Kit
 │   ├── workflows/            # Workflows do Spec Kit
 │   └── integrations/         # Manifestos de integração
+├── specs/
+│   └── 001-mvp-orquestracao-agentes/
+│       └── spec.md           # Spec do MVP (ATQ-001)
+├── SPEC.md                   # Especificação geral, arquitetura, riscos e milestones
 ├── .gitignore
 └── README.md
 ```
 
-### Planejada (sujeita ao SPEC.md)
-
-A stack ainda não foi escolhida. A estrutura abaixo é provisória e será ajustada após a aprovação
-do SPEC.md.
+### Planejada
 
 ```
 AtlasOrchestrator/
-├── SPEC.md                # Especificação, arquitetura, riscos e milestones
-├── specs/                 # Especificações por funcionalidade (Spec Kit)
-├── docs/                  # Documentação e ADRs
-├── src/
-│   ├── pty/               # Camada PTY: criação e ciclo de vida dos terminais
-│   ├── canvas/            # Camada de canvas: pan, zoom, nós e conexões
-│   ├── orchestration/     # Orquestração agente-a-agente
-│   └── storage/           # Armazenamento do workspace
-└── tests/                 # Testes unitários e de integração
+├── SPEC.md
+├── specs/                   # Specs por funcionalidade (Spec Kit)
+├── docs/                    # ADRs, threat model, tutorial para agentes, guia de orquestração
+├── crates/
+│   ├── atlasoq-pty/         # Camada PTY
+│   ├── atlasoq-link/        # Orquestração agente-a-agente
+│   ├── atlasoq-store/       # Persistência do workspace
+│   └── atlasoq-cli/         # CLI `atlasoq`
+├── app/
+│   ├── src-tauri/           # Integração Tauri
+│   └── ui/                  # Canvas, nós, conexões e notas
+├── packaging/               # .deb, .desktop, ícones
+└── tests/                   # Integração e E2E
 ```
 
 ## Como contribuir
 
-Antes de propor código, leia a [constituição](.specify/memory/constitution.md). Mudanças de escopo
-devem passar primeiro pelo SPEC.md.
+Antes de propor código, leia a [constituição](.specify/memory/constitution.md). O trabalho acontece
+em branches `ATQ-NNN`, e cada commit começa com o identificador da branch (ex.: `ATQ-001 ...`).
+Mudanças de escopo passam primeiro pelo SPEC.md.
 
 ## Licença
 
-A licença ainda será definida.
+A licença ainda será definida (recomendação: Apache-2.0).
