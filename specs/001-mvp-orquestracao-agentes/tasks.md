@@ -82,15 +82,15 @@ e teste por modo de hook (FR-030), sanitização (SC-006), encerramento forçado
 
 ### Núcleo de armazenamento (atlasoq-store) — testes primeiro
 
-- [ ] T031 [P] Teste: escrita atômica sobrevive a interrupção simulada (arquivo final é a versão antiga ou a nova, nunca parcial) em crates/atlasoq-store/tests/atomic.rs
-- [ ] T032 [P] Teste: validação de `workspace.json` recusa nomes duplicados, nomes inválidos, ids inexistentes, `from == to`, nota↔nota e `cwd` absoluto em crates/atlasoq-store/tests/validate.rs
-- [ ] T033 Implementar `write_atomic` (temporário no mesmo diretório → `fsync` → `rename` → `fsync` do diretório) em crates/atlasoq-store/src/atomic.rs
-- [ ] T034 Implementar os tipos `Workspace`, `Agent`, `Note`, `Connection`, `ConnectionLimits` (padrões `max_exchanges` 20, `rate_per_min` 6, `burst` 3, `ping_pong_repeats` 4) com serde, `schema: 1`, `zoom` entre 0.1 e 4.0, `role` até 200 caracteres, `w ≥ 240`, `h ≥ 160`, `cols` 20–500, `rows` 5–200 em crates/atlasoq-store/src/model.rs
-- [ ] T035 Implementar a validação descrita em contracts/workspace-format.md em crates/atlasoq-store/src/validate.rs
-- [ ] T036 Implementar criar/abrir workspace: cria `<raiz>/.atlasoq/` com `workspace.json`, `notes/`, `profiles/`, `memory/`, `agents/`, `logs/`, `backups/` e o `.gitignore` gerado (linhas `agents/`, `logs/`, `backups/`, `.lock`, `memory/   # atlasoq:memory`), recusando raiz sem permissão de escrita em crates/atlasoq-store/src/workspace.rs
-- [ ] T037 Implementar lock exclusivo (`flock` em `.atlasoq/.lock`) impedindo abrir o mesmo workspace duas vezes em crates/atlasoq-store/src/lock.rs
-- [ ] T038 Implementar salvamento com debounce de 500 ms disparado por mutações em crates/atlasoq-store/src/autosave.rs
-- [ ] T039 Implementar perfis em dois níveis (globais em `~/.config/atlasoq/profiles/`, do workspace em `.atlasoq/profiles/` com precedência) e os perfis prontos `claude-code` (`hook`), `codex` (`prompt`), `gemini` (`prompt`), `opencode` (`prompt`), `aider` (`type`), `shell` (`off`) conforme docs/spikes/r4-hooks-clis.md em crates/atlasoq-store/src/profiles.rs
+- [X] T031 [P] Teste: escrita atômica sobrevive a interrupção simulada (arquivo final é a versão antiga ou a nova, nunca parcial) em crates/atlasoq-store/tests/atomic.rs
+- [X] T032 [P] Teste: validação de `workspace.json` recusa nomes duplicados, nomes inválidos, ids inexistentes, `from == to`, nota↔nota e `cwd` absoluto em crates/atlasoq-store/tests/validate.rs
+- [X] T033 Implementar `write_atomic` (temporário no mesmo diretório → `fsync` → `rename` → `fsync` do diretório) em crates/atlasoq-store/src/atomic.rs
+- [X] T034 Implementar os tipos `Workspace`, `Agent`, `Note`, `Connection`, `ConnectionLimits` (padrões `max_exchanges` 20, `rate_per_min` 6, `burst` 3, `ping_pong_repeats` 4) com serde, `schema: 1`, `zoom` entre 0.1 e 4.0, `role` até 200 caracteres, `w ≥ 240`, `h ≥ 160`, `cols` 20–500, `rows` 5–200 em crates/atlasoq-store/src/model.rs
+- [X] T035 Implementar a validação descrita em contracts/workspace-format.md em crates/atlasoq-store/src/validate.rs
+- [X] T036 Implementar criar/abrir workspace: cria `<raiz>/.atlasoq/` com `workspace.json`, `notes/`, `profiles/`, `memory/`, `agents/`, `logs/`, `backups/` e o `.gitignore` gerado (linhas `agents/`, `logs/`, `backups/`, `.lock`, `memory/   # atlasoq:memory`), recusando raiz sem permissão de escrita em crates/atlasoq-store/src/workspace.rs
+- [X] T037 Implementar lock exclusivo (`flock` em `.atlasoq/.lock`) impedindo abrir o mesmo workspace duas vezes em crates/atlasoq-store/src/lock.rs
+- [X] T038 Implementar salvamento com debounce de 500 ms disparado por mutações em crates/atlasoq-store/src/autosave.rs
+- [X] T039 Implementar perfis em dois níveis (globais em `~/.config/atlasoq/profiles/`, do workspace em `.atlasoq/profiles/` com precedência) e os perfis prontos `claude-code` (`hook`), `codex` (`prompt`), `gemini` (`prompt`), `opencode` (`prompt`), `aider` (`type`), `shell` (`off`) conforme docs/spikes/r4-hooks-clis.md em crates/atlasoq-store/src/profiles.rs
 
 ### Integração Tauri base
 
