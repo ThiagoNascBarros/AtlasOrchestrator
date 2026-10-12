@@ -1,7 +1,16 @@
 <!--
 Sync Impact Report
 ==================
-Versão: 1.2.0 → 1.3.0 (MINOR: memória de longo prazo por agente entra no MVP)
+Versão: 1.3.0 → 1.3.1 (PATCH: esclarecimentos do princípio IV após /speckit-analyze)
+
+Alterações da 1.3.1:
+- IV. Comunicação Entre Agentes: a direção da conexão define quem pode iniciar (enviar, perguntar,
+  ler a tela); a resposta a uma pergunta pendente e o conteúdo lido voltam pelo mesmo canal.
+  Mensagens do próprio app ao agente que ele criou (entrega de aprendizado e memória) não são
+  comunicação entre agentes e são permitidas, sanitizadas e registradas no log.
+- Restrições: frase sobre a direção do canal alinhada ao princípio IV.
+
+Alterações da 1.3.0 (memória de longo prazo por agente entra no MVP):
 
 Alterações da 1.3.0:
 - VII. Escopo de MVP: inclui memória de longo prazo por agente.
@@ -73,7 +82,12 @@ falso quebra essas ferramentas.
 ### IV. Comunicação Entre Agentes com Consentimento Explícito
 Uma conexão entre dois agentes MUST ser criada por ação explícita do usuário e MUST ser visível
 no canvas, com sua direção. Nenhum dado MUST ser injetado em um PTY sem que a conexão
-correspondente exista, esteja ativa e permita aquela direção. A comunicação MUST ocorrer por
+correspondente exista, esteja ativa e permita aquela direção. A direção define quem pode
+**iniciar**: numa conexão `A → B`, A pode enviar e perguntar a B e ler a tela de B; B só pode
+responder a uma pergunta pendente de A, e essa resposta vai apenas para o comando que perguntou,
+nunca digitada no terminal de A. Mensagens que o próprio app envia ao agente que ele criou (entrega
+do tutorial e da memória no hook de inicialização) não são comunicação entre agentes: são
+permitidas sem conexão, MUST ser sanitizadas e MUST ser registradas no log. A comunicação MUST ocorrer por
 mensagens mediadas pelo app (via CLI `atlasoq`), sanitizadas antes da entrega; pipe bruto de bytes
 entre PTYs e envio de teclas de controle NÃO são permitidos. Toda conexão MUST poder ser pausada ou
 desfeita pelo usuário, com efeito imediato. Trocas automáticas entre agentes MUST ter limites
@@ -144,8 +158,8 @@ silêncio.
 
 - Dados de terminal (entrada, saída, histórico) MUST permanecer locais. Telemetria MUST ser
   desativada por padrão e MUST ser opt-in explícito, se existir.
-- O canal entre agentes MUST ser unidirecional ou bidirecional apenas conforme a conexão definida
-  pelo usuário. Nenhum agente MUST ter permissão para criar, alterar ou remover conexões.
+- O canal entre agentes MUST respeitar a direção definida pelo usuário quanto a quem pode iniciar
+  (princípio IV); respostas a perguntas pendentes e leituras de tela retornam por esse canal. Nenhum agente MUST ter permissão para criar, alterar ou remover conexões.
 - O socket local da CLI MUST ser acessível só pelo usuário dono do app e MUST autenticar o nó de
   origem de cada requisição.
 - Processos filhos dos PTYs MUST rodar com as permissões do usuário. O app NÃO MUST elevar
@@ -199,4 +213,4 @@ PR que viole um princípio MUST ser bloqueado até que a violação seja corrigi
 seja aprovada. Complexidade adicional (nova dependência, nova camada, nova abstração) MUST ser
 justificada no próprio PR.
 
-**Version**: 1.3.0 | **Ratified**: 2026-10-11 | **Last Amended**: 2026-10-11
+**Version**: 1.3.1 | **Ratified**: 2026-10-11 | **Last Amended**: 2026-10-11

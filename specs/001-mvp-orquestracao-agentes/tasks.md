@@ -148,7 +148,7 @@ e teste por modo de hook (FR-030), sanitização (SC-006), encerramento forçado
 - [ ] T062 [P] [US2] Teste de integração com dois PTYs reais: criar conexão `forward`, `send` entregue com cabeçalho, sentido inverso recusado, pausa recusa imediatamente, apagar recusa em tests/integration/two_ptys_connection.rs
 - [ ] T063 [P] [US2] Teste de integração do `ask`/`reply`: resposta exata devolvida; tempo esgotado devolve tela com código 5; `reply` sem pergunta (código 3), ambíguo (código 2) e expirado (código 3); cancelamento por pausa/encerramento em tests/integration/ask_reply.rs
 - [ ] T064 [P] [US2] Teste da proteção contra loops: 20 trocas sem entrada humana pausam a conexão (SC-007); tecla do usuário zera; limite de taxa; ping-pong em crates/atlasoq-link/tests/loop_guard.rs
-- [ ] T065 [P] [US2] Testes de contrato da CLI com `assert_cmd` + `insta` para `list`, `send`, `read`, `ask`, `reply`, `help`, códigos de saída, `--json`, texto por stdin e sugestão de comando com distância de edição ≤ 2 (SC-004) em crates/atlasoq-cli/tests/contract.rs
+- [ ] T065 [P] [US2] Testes de contrato da CLI com `assert_cmd` + `insta` para `list`, `send`, `read`, `ask`, `reply`, `help`, códigos de saída 0/2/3/4/5/6/7, mensagens de erro, `--json`, texto por stdin e sugestão de comando com distância de edição ≤ 2 (SC-004) em crates/atlasoq-cli/tests/contract.rs
 
 ### Implementation for User Story 2
 
@@ -164,7 +164,7 @@ e teste por modo de hook (FR-030), sanitização (SC-006), encerramento forçado
 - [ ] T075 [US2] Implementar a CLI `atlasoq` com os comandos `list`, `send`, `read`, `ask`, `reply`, `help`, saída texto/`--json`, texto por argumento ou stdin, erros no formato "erro: … / próximo passo" conforme contracts/cli.md em crates/atlasoq-cli/src/main.rs e crates/atlasoq-cli/src/commands/
 - [ ] T076 [US2] Implementar a sugestão de comando por distância de edição em crates/atlasoq-cli/src/suggest.rs
 - [ ] T077 [US2] Iniciar o broker com o app, colocar o diretório da CLI no início do `PATH` dos agentes e expor eventos de mensagem/estado de conexão à UI em app/src-tauri/src/broker.rs
-- [ ] T078 [US2] Implementar os comandos Tauri `connection_create` (sem auto-ligação), `connection_set_direction`, `connection_pause`, `connection_resume`, `connection_delete`, `connection_history` em app/src-tauri/src/commands/connection.rs
+- [ ] T078 [US2] Implementar os comandos Tauri `connection_create` (sem auto-conexão), `connection_set_direction`, `connection_pause`, `connection_resume`, `connection_delete`, `connection_history` em app/src-tauri/src/commands/connection.rs
 - [ ] T079 [P] [US2] Implementar as linhas SVG das conexões com direção, estado (ativa, pausada, pausada automaticamente) e animação de passagem de mensagem em app/ui/src/connections/ConnectionLayer.tsx
 - [ ] T080 [US2] Implementar a criação de conexão arrastando de um nó a outro e o menu (direção, pausar, reativar, apagar) em app/ui/src/connections/connect.ts
 - [ ] T081 [US2] Implementar o painel de histórico da conexão (horário, origem, destino, texto, resultado) e o aviso de pausa automática em app/ui/src/connections/HistoryPanel.tsx
@@ -182,7 +182,8 @@ e teste por modo de hook (FR-030), sanitização (SC-006), encerramento forçado
 ### Tests for User Story 3
 
 - [ ] T082 [P] [US3] Criar CLIs falsas que registram o que receberam (via hook `SessionStart` simulado, argumento de prompt e entrada digitada) em tests/fake-agents/
-- [ ] T083 [P] [US3] Teste por modo: agente recém-criado recebe o conteúdo de aprendizado em `hook`, `prompt` e `type`; `off` não recebe; falha por tempo-limite marca `failed` em tests/integration/learn_modes.rs
+- [ ] T083 [P] [US3] Teste por modo: agente recém-criado recebe o conteúdo de aprendizado em `hook`, `prompt` e `type` em até 30 s após ficar pronto (SC-002a); `off` não recebe; falha por tempo-limite marca `failed`; a entrega do modo `type` aparece no log como mensagem do app em tests/integration/learn_modes.rs
+- [ ] T140 [P] [US3] Testes de contrato de `atlasoq learn` (normal, `--hook`, fora do app com código 0, limite de 9.000 caracteres) e de `atlasoq help` com exemplo de cada comando em crates/atlasoq-cli/tests/contract_learn.rs
 - [ ] T084 [P] [US3] Teste do tutorial: extrai cada bloco de exemplo de docs/agentes/tutorial.md e executa contra dois agentes conectados, verificando o efeito; falha se o tutorial passar de 60 linhas (SC-003) em tests/tutorial/run_examples.rs
 - [ ] T085 [P] [US3] Teste de que o hook não escreve fora de `.atlasoq/` (snapshot do diretório raiz antes e depois) em tests/integration/learn_no_side_effects.rs
 
@@ -190,7 +191,7 @@ e teste por modo de hook (FR-030), sanitização (SC-006), encerramento forçado
 
 - [ ] T086 [P] [US3] Escrever o tutorial para agentes (≤ 60 linhas, afirmações factuais, `list` primeiro, um exemplo por comando, `reply` para perguntas, regras, erros comuns) conforme o esqueleto de contracts/cli.md em docs/agentes/tutorial.md
 - [ ] T087 [P] [US3] Escrever o guia para usuários com receitas (coordenador → executores, executor ↔ revisor, nota de plano compartilhada, como escrever papéis, como liberar `atlasoq` nas permissões de cada CLI) em docs/guia-orquestracao.md
-- [ ] T088 [US3] Montar o conteúdo de aprendizado na ordem do contrato (identidade, ligações, tutorial, `learn.md` até 4 KiB, espaço para memória), limitado a 9.000 caracteres em crates/atlasoq-link/src/learn_content.rs
+- [ ] T088 [US3] Montar o conteúdo de aprendizado na ordem do contrato (identidade, conexões, tutorial, `learn.md` até 4 KiB, espaço para memória), limitado a 9.000 caracteres em crates/atlasoq-link/src/learn_content.rs
 - [ ] T089 [US3] Implementar o handler `learn` (normal e `--hook`, que registra `learn: done`) e o comando `atlasoq learn` com o tutorial embutido via `include_str!` e saída genérica fora do app em crates/atlasoq-link/src/handlers.rs e crates/atlasoq-cli/src/commands/learn.rs
 - [ ] T090 [US3] Implementar o modo `hook`: gerar `.atlasoq/agents/<nome>/claude-settings.json` com `SessionStart` (matchers `startup`, `resume`, `clear`, `compact`) → `atlasoq learn --hook` e `permissions.allow` para `atlasoq`, e acrescentar `--settings <arquivo>` ao comando em crates/atlasoq-link/src/learn_hook.rs
 - [ ] T091 [US3] Implementar o modo `prompt`: passar o conteúdo de aprendizado como argumento de prompt inicial conforme o perfil (ex.: `codex "<texto>"`, `gemini --prompt-interactive "<texto>"`, `opencode --prompt "<texto>"`) em crates/atlasoq-link/src/learn_prompt.rs
@@ -211,7 +212,8 @@ e teste por modo de hook (FR-030), sanitização (SC-006), encerramento forçado
 
 ### Tests for User Story 4
 
-- [ ] T096 [P] [US4] Teste de integração de `note_read`/`note_append`: leitura com qualquer ligação, acréscimo só com agente → nota ou ↔, recusa sem ligação, formato `- AAAA-MM-DD HH:MM [<agente>] <texto>` em tests/integration/notes.rs
+- [ ] T096 [P] [US4] Teste de integração de `note_read`/`note_append`: leitura com qualquer conexão, acréscimo só com agente → nota ou ↔, recusa sem conexão, formato `- AAAA-MM-DD HH:MM [<agente>] <texto>` em tests/integration/notes.rs
+- [ ] T141 [P] [US4] Testes de contrato de `atlasoq note` (leitura, acréscimo, recusas com códigos 3 e 7, mensagens de erro, `--json`) em crates/atlasoq-cli/tests/contract_note.rs
 - [ ] T097 [P] [US4] Teste de alteração externa: nota editada fora do app é recarregada; conflito com edição não salva mostra as duas versões em crates/atlasoq-store/tests/notes_watch.rs
 
 ### Implementation for User Story 4
@@ -231,7 +233,7 @@ e teste por modo de hook (FR-030), sanitização (SC-006), encerramento forçado
 
 **Goal**: reabrir exatamente como estava, com agentes iniciando sozinhos, backups, segredos fora do disco e aprovação de workspaces de terceiros.
 
-**Independent Test**: montar workspace com agentes, notas e ligações; encerrar à força; reabrir e comparar (spec, US5).
+**Independent Test**: montar workspace com agentes, notas e conexões; encerrar à força; reabrir e comparar (spec, US5).
 
 ### Tests for User Story 5
 
@@ -264,6 +266,7 @@ e teste por modo de hook (FR-030), sanitização (SC-006), encerramento forçado
 
 - [ ] T115 [P] [US7] Teste de memória: prefixo obrigatório (`feito:`, `decisão:`, `pendente:`), limite de 300 caracteres, data e hora acrescentadas, recusa de segredos (código 7), outro agente não acessa (código 3) em tests/integration/memory.rs
 - [ ] T116 [P] [US7] Teste de entrega: só as 20 anotações mais recentes dentro de 2 KiB, aviso de anotações antigas, total de aprendizado ≤ 9.000 caracteres (SC-012) em crates/atlasoq-link/tests/learn_memory.rs
+- [ ] T142 [P] [US7] Testes de contrato de `atlasoq note memory` (prefixo obrigatório, 300 caracteres, segredo recusado com código 7, acesso de outro agente recusado com código 3) em crates/atlasoq-cli/tests/contract_memory.rs
 - [ ] T117 [P] [US7] Teste do botão de versionamento: remove e recoloca só a linha `# atlasoq:memory`, preservando o resto do `.gitignore` em crates/atlasoq-store/tests/gitignore.rs
 
 ### Implementation for User Story 7
@@ -306,6 +309,9 @@ e teste por modo de hook (FR-030), sanitização (SC-006), encerramento forçado
 - [ ] T133 [P] Escrever o modelo de ameaças (conexões, injeção de prompt em cadeia, workspace malicioso, tokens, mesmo uid fora do escopo) em docs/threat-model.md
 - [ ] T134 [P] Registrar a licença de cada dependência em docs/licenses.md
 - [ ] T135 [P] Teste de IME (ibus e fcitx5) nos terminais e notas, documentando limitações em docs/limitacoes.md
+- [ ] T143 [P] Garantir FR-042 (sem rede e sem telemetria): CSP do Tauri sem origens remotas, nenhum plugin de rede, e teste que falha se o app abrir conexão de saída (rodando em namespace de rede isolado) em app/src-tauri/tauri.conf.json e tests/integration/no_network.rs
+- [ ] T144 Checklist manual de release em GNOME e KDE, cada um em Wayland e X11 (canvas, terminais, zoom, IME, clipboard, menu e ícone), executado e registrado em docs/medicoes/plataformas-mvp.md (FR-040)
+- [ ] T145 Teste de usabilidade com pelo menos 3 pessoas que não conhecem o app: instalar o `.deb`, criar dois agentes, conectá-los e trocar uma mensagem em menos de 5 minutos sem documentação externa (SC-001), registrado em docs/medicoes/usabilidade-mvp.md
 - [ ] T136 Revisão de segurança explícita das mudanças em conexões, consentimento e transmissão (constituição) registrada em docs/revisoes/seguranca-mvp.md
 - [ ] T137 Medir SC-002 e SC-013 com pelo menos duas CLIs de agente reais (10 tentativas cada) e registrar em docs/medicoes/mvp.md
 - [ ] T138 Atualizar README com GIF de demonstração, arquitetura, CLI e limitações conhecidas em README.md
@@ -387,7 +393,8 @@ Task: "Camada SVG de conexões em app/ui/src/connections/ConnectionLayer.tsx"
 | M2 | T031–T044 (núcleo do store e Tauri base), T045–T059 |
 | M3 | T096–T114 |
 | M4 | T060–T095, T115–T125 |
-| M5 | T126–T139 |
+| M4 | (também) T140–T142 |
+| M5 | T126–T139, T143–T145 |
 
 ---
 
@@ -396,4 +403,6 @@ Task: "Camada SVG de conexões em app/ui/src/connections/ConnectionLayer.tsx"
 - [P] = arquivos diferentes, sem dependência de tarefa incompleta.
 - Cada história pode ser validada sozinha pelo seu Independent Test.
 - Nenhuma tarefa escreve fora de `.atlasoq/` no projeto do usuário (princípio IX).
+- T140–T145 foram acrescentadas após o `/speckit-analyze` e mantêm IDs novos para não renumerar
+  as tarefas existentes; a posição no arquivo indica a ordem de execução.
 - Mudança na CLI exige atualizar docs/agentes/tutorial.md no mesmo PR (princípio IX).

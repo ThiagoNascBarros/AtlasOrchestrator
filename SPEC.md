@@ -5,7 +5,7 @@
 | Status | **Aprovado com alterações** (nome, stack, `.deb`); detalhes do MVP em [specs/001](specs/001-mvp-orquestracao-agentes/spec.md) |
 | Versão | 0.3.0 |
 | Data | 2026-10-11 |
-| Constituição | v1.3.0 |
+| Constituição | v1.3.1 |
 | Fontes de pesquisa | `relatorio-orquestracao-agentes-ia-desktop-claude.md`, `relatorio-orquestracao-agentes-ia-desktop-gemini.md` |
 
 AtlasOQ é um canvas infinito para **orquestrar agentes de IA** no Linux. Cada agente roda num
@@ -148,7 +148,7 @@ perder os últimos ~500 ms de alterações de layout.
 
 - Oito comandos curtos, sem flags no uso comum (seção 6.4.2).
 - `atlasoq learn` imprime um tutorial de até ~60 linhas, escrito para agentes, personalizado com o
-  nome e as ligações de quem o executou.
+  nome e as conexões de quem o executou.
 - Mesmo tutorial em `docs/agentes/tutorial.md` e um guia de receitas de orquestração para usuários
   em `docs/guia-orquestracao.md`.
 - Teste automatizado que executa todos os exemplos do tutorial.
@@ -250,7 +250,7 @@ WebKitGTK do sistema.
 - Canvas infinito, linhas, seleção e minimapa precisam ser desenhados à mão.
 - Markdown renderizado em GTK não tem solução pronta de qualidade (GtkTextView manual ou um
   WebView, o que traz de volta parte da Opção A).
-- VTE é LGPL; compatível com MIT/Apache por ligação dinâmica, mas exige atenção.
+- VTE é LGPL; compatível com MIT/Apache por conexão dinâmica, mas exige atenção.
 - Já existe um projeto embrionário nesse nicho (GTK4 + VTE), segundo o relatório.
 - Curva de gtk4-rs mais íngreme e menos gente para contribuir.
 
@@ -447,7 +447,7 @@ dizem o próximo passo, saída em texto com `--json` opcional.
 | `atlasoq read <agente>` | Texto recente da tela do agente, sem ANSI | conexão ativa eu→agente |
 | `atlasoq ask <agente> <texto>` | Envia uma pergunta e espera a resposta dada com `reply`; no tempo-limite devolve a leitura da tela, com aviso | conexão ativa eu→agente |
 | `atlasoq reply [agente] <texto>` | Responde a uma pergunta pendente; a resposta vai só para o `ask` que espera | pergunta pendente endereçada a mim |
-| `atlasoq note <nota> [texto]` | Sem texto: lê a nota. Com texto: acrescenta ao fim, com autor e hora | leitura: qualquer ligação; acréscimo: agente→nota |
+| `atlasoq note <nota> [texto]` | Sem texto: lê a nota. Com texto: acrescenta ao fim, com autor e hora | leitura: qualquer conexão; acréscimo: agente→nota |
 | `atlasoq help [comando]` | Ajuda geral ou de um comando, com exemplo | — |
 
 Detalhes:
@@ -465,7 +465,7 @@ Exemplo de erro:
 
 ```
 $ atlasoq send planner "pronto"
-erro: não existe ligação de "coder" para "planner".
+erro: não existe conexão de "coder" para "planner".
       Você só pode enviar para: revisor.
       Para falar com "planner", peça ao usuário para ligar coder → planner no canvas.
 ```
@@ -735,7 +735,7 @@ Aprovadas em 2026-10-11:
 1. **Nome:** AtlasOQ (README e constituição atualizados; o diretório local continua
    `AtlasOrchestrator` até a criação do repositório público).
 2. **Stack:** Tauri v2 + xterm.js + portable-pty, com o plano B (Electron) e os critérios do M0.
-3. **Foco do canvas:** orquestração de agentes de IA (agentes com nome e papel, status, ligações,
+3. **Foco do canvas:** orquestração de agentes de IA (agentes com nome e papel, status, conexões,
    notas como contexto compartilhado).
 4. **CLI:** 8 comandos curtos e fáceis de lembrar (seção 6.4.2); tutorial para agentes via
    `atlasoq learn` (seção 6.4.7).

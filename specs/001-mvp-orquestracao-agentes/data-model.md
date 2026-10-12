@@ -26,7 +26,7 @@ em memória no processo do app.
 |---|---|---|
 | `id` | string | `a_<ulid>` |
 | `kind` | `"agent"` | |
-| `name` | string | `^[a-z][a-z0-9-]{0,31}$`; único no workspace; `memory` é reservado |
+| `name` | string | `^[a-z][a-z0-9-]{0,31}$` (começa por letra, até 32 caracteres; FR-007); único no workspace; `memory` é reservado |
 | `role` | string | Opcional, até 200 caracteres |
 | `profile` | string | Nome do perfil de origem |
 | `rect` | `{x, y, w, h}` | `w ≥ 240`, `h ≥ 160` |
@@ -54,7 +54,7 @@ em memória no processo do app.
 |---|---|---|
 | `id` | string | `c_<ulid>` |
 | `from`, `to` | id de nó | `from ≠ to`; agente↔agente ou agente↔nota; nota↔nota não permitido |
-| `direction` | `forward` \| `backward` \| `both` | `forward` = `from → to` |
+| `direction` | `forward` \| `backward` \| `both` | `forward` = `from → to` (→), `backward` = `to → from` (←), `both` = ↔ |
 | `state` | `active` \| `paused` \| `auto_paused` | `auto_paused` guarda `pause_reason` |
 | `pause_reason` | string? | `max_exchanges`, `rate_limit`, `ping_pong` |
 | `limits` | `ConnectionLimits` | |
@@ -64,7 +64,7 @@ em memória no processo do app.
 
 Permissões derivadas de uma conexão ativa:
 
-| Ligação | Quem envia / pergunta / lê a tela | Nota |
+| Conexão | Quem envia / pergunta / lê a tela | Nota |
 |---|---|---|
 | agente A → agente B | A sobre B; B só responde a `ask` pendente de A | — |
 | agente A ↔ agente B | Os dois | — |
@@ -147,5 +147,8 @@ cancela as perguntas pendentes.
 ### ExchangeCounter (por conexão)
 
 Incrementa quando um agente envia (send/ask/reply) a quem lhe enviou algo nos últimos 120 s.
+Detector de ping-pong: 4 trocas seguidas (`ping_pong_repeats`) cujo texto normalizado (minúsculas,
+espaços colapsados, sem cabeçalho do AtlasOQ) é idêntico ou tem similaridade ≥ 90% (distância de
+edição normalizada) com a mensagem anterior no mesmo sentido.
 Zera com qualquer tecla do usuário num dos dois terminais. Ao passar de `max_exchanges` →
 `auto_paused`.

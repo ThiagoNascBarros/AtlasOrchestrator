@@ -39,7 +39,7 @@ Esperado: "AtlasOQ" aparece no menu com ícone próprio.
    "implementa").
    Esperado: em até 30 s cada nó mostra `pronto` no aprendizado, sem nenhuma ação.
 3. No `coder`, pedir em linguagem natural: "quem é você no AtlasOQ e com quem você fala?".
-   Esperado: ele se identifica como `coder` e diz que ainda não tem ligações.
+   Esperado: ele se identifica como `coder` e diz que ainda não tem conexões.
 4. Dar zoom de 25% a 200% e pan.
    Esperado: movimento fluido; texto nítido ao parar; abaixo de 35% os nós viram cartões.
 
@@ -50,13 +50,13 @@ Esperado: "AtlasOQ" aparece no menu com ícone próprio.
    Esperado: `planner` usa `atlasoq ask coder ...`; `coder` recebe `[atlasoq ask de:planner ...]`,
    responde com `atlasoq reply "..."`; `planner` recebe a resposta; a linha anima.
 3. No terminal do `coder`, rodar `atlasoq send planner "oi"` manualmente.
-   Esperado: código 3, mensagem dizendo que a ligação só vai de `planner` para `coder`.
-4. Pausar a ligação e repetir o passo 2.
+   Esperado: código 3, mensagem dizendo que a conexão só vai de `planner` para `coder`.
+4. Pausar a conexão e repetir o passo 2.
    Esperado: recusa imediata com o motivo.
 5. Clicar na linha.
    Esperado: histórico com as mensagens e recusas.
 6. Ligar os dois em ↔ e pedir que conversem "até concordarem sobre um nome de função".
-   Esperado: no máximo 20 trocas e a ligação fica `pausada automaticamente` com aviso.
+   Esperado: no máximo 20 trocas e a conexão fica `pausada automaticamente` com aviso.
 
 ## 5. Notas e memória (histórias 4 e 7)
 

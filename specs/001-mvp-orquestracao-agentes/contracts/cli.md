@@ -55,13 +55,13 @@ perguntas pendentes para você: 1 (de planner) — responda com: atlasoq reply "
 ### `atlasoq send <agente> <texto>`
 
 Entrega e retorna. Saída: `enviado para revisor (msg 42)`.
-Erros: 3 sem ligação no sentido; 4 destino inexistente/encerrado; 7 texto > 16 KiB ou vazio;
+Erros: 3 sem conexão no sentido; 4 destino inexistente/encerrado; 7 texto > 16 KiB ou vazio;
 3 conexão pausada (com motivo).
 
 ### `atlasoq read <agente> [--lines N]`
 
 Texto recente da tela e do scrollback do agente, sem ANSI. `N` padrão 60, máximo 2000. Requer
-ligação no sentido eu → agente.
+conexão no sentido eu → agente.
 
 ### `atlasoq ask <agente> <texto> [--timeout S]`
 
@@ -87,8 +87,8 @@ de um perguntador pendente; caso contrário, tudo é texto.
 
 ### `atlasoq note <nota> [texto]`
 
-- Sem texto: imprime a nota. Requer qualquer ligação ativa entre a nota e o agente.
-- Com texto: acrescenta ao fim como `- AAAA-MM-DD HH:MM [<agente>] <texto>`. Requer ligação
+- Sem texto: imprime a nota. Requer qualquer conexão ativa entre a nota e o agente.
+- Com texto: acrescenta ao fim como `- AAAA-MM-DD HH:MM [<agente>] <texto>`. Requer conexão
   agente → nota ou ↔.
 - `atlasoq note memory` lê a própria memória; `atlasoq note memory "feito: ..."` acrescenta.
   Prefixo obrigatório `feito:`, `decisão:` ou `pendente:`; até 300 caracteres; segredos recusados

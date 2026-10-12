@@ -22,7 +22,7 @@ Tamanho máximo total: 9.000 caracteres (abaixo do limite de 10.000 do SessionSt
 |---|---|---|---|
 | `hook` | A CLI do agente executa seu hook de início de sessão | O app gera `.atlasoq/agents/<nome>/claude-settings.json` com hook `SessionStart` → `atlasoq learn --hook` e regra de permissão para `atlasoq`; inicia `claude --settings <arquivo>` | `atlasoq learn --hook` é chamado pelo agente |
 | `prompt` | Início do processo | Texto passado como argumento de prompt inicial do perfil (ex.: `codex "<texto>"`) | O processo iniciou sem erro |
-| `type` | Primeira transição para `idle` após o início (≤ `ready_timeout_s`) | Texto entregue pelo caminho normal de mensagens (sanitizado, bracketed paste, `\r`) | Entrega concluída |
+| `type` | Primeira transição para `idle` após o início (≤ `ready_timeout_s`) | Mensagem do próprio app ao agente (permitida sem conexão pelo princípio IV v1.3.1), entregue pelo caminho normal (sanitizada, bracketed paste, `\r`) e registrada no log | Entrega concluída |
 | `off` | — | — | — |
 
 ## Regras
