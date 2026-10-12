@@ -8,5 +8,9 @@ authors.workspace = true
 publish = false
 
 [dependencies]
+portable-pty.workspace = true
+vt100.workspace = true
+libc.workspace = true
+thiserror.workspace = true
 
 [dev-dependencies]

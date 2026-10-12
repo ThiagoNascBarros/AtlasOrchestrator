@@ -62,23 +62,23 @@ e teste por modo de hook (FR-030), sanitização (SC-006), encerramento forçado
 
 ### Tipos compartilhados (atlasoq-core)
 
-- [ ] T017 [P] Implementar `NodeName` com validação `^[a-z][a-z0-9-]{0,31}$`, nome reservado `memory` recusado para nós, e ids `a_<ulid>`, `n_<ulid>`, `c_<ulid>`, `ws_<ulid>` em crates/atlasoq-core/src/ids.rs
-- [ ] T018 [P] Definir os códigos de saída estáveis (0 sucesso, 2 uso incorreto, 3 sem conexão/permissão, 4 destino indisponível, 5 tempo esgotado, 6 fora do AtlasOQ, 7 conteúdo recusado) e os identificadores de erro do protocolo (`bad_request`, `unknown_target`, `no_connection`, `wrong_direction`, `connection_paused`, `target_exited`, `too_large`, `secret_detected`, `missing_prefix`, `no_pending_ask`, `ambiguous_reply`, `ask_expired`, `timeout`, `unauthorized`, `app_closing`, `unsupported_version`) em crates/atlasoq-core/src/errors.rs
-- [ ] T019 [P] Definir requisição e resposta do protocolo `v: 1` (ops `learn`, `list`, `send`, `read`, `ask`, `reply`, `note_read`, `note_append`) conforme contracts/socket-protocol.md em crates/atlasoq-core/src/protocol.rs
-- [ ] T020 [P] Criar o catálogo de textos pt-BR (mensagens de erro com "próximo passo", rótulos de status) em crates/atlasoq-core/src/i18n.rs
+- [X] T017 [P] Implementar `NodeName` com validação `^[a-z][a-z0-9-]{0,31}$`, nome reservado `memory` recusado para nós, e ids `a_<ulid>`, `n_<ulid>`, `c_<ulid>`, `ws_<ulid>` em crates/atlasoq-core/src/ids.rs
+- [X] T018 [P] Definir os códigos de saída estáveis (0 sucesso, 2 uso incorreto, 3 sem conexão/permissão, 4 destino indisponível, 5 tempo esgotado, 6 fora do AtlasOQ, 7 conteúdo recusado) e os identificadores de erro do protocolo (`bad_request`, `unknown_target`, `no_connection`, `wrong_direction`, `connection_paused`, `target_exited`, `too_large`, `secret_detected`, `missing_prefix`, `no_pending_ask`, `ambiguous_reply`, `ask_expired`, `timeout`, `unauthorized`, `app_closing`, `unsupported_version`) em crates/atlasoq-core/src/errors.rs
+- [X] T019 [P] Definir requisição e resposta do protocolo `v: 1` (ops `learn`, `list`, `send`, `read`, `ask`, `reply`, `note_read`, `note_append`) conforme contracts/socket-protocol.md em crates/atlasoq-core/src/protocol.rs
+- [X] T020 [P] Criar o catálogo de textos pt-BR (mensagens de erro com "próximo passo", rótulos de status) em crates/atlasoq-core/src/i18n.rs
 
 ### Camada PTY (atlasoq-pty) — testes primeiro
 
-- [ ] T021 [P] Teste de integração: spawn de `sh -c 'printf ok'` captura a saída e o código de saída 0 em crates/atlasoq-pty/tests/spawn.rs
-- [ ] T022 [P] Teste de integração: `resize(cols, rows)` é refletido em `stty size` do processo em crates/atlasoq-pty/tests/resize.rs
-- [ ] T023 [P] Teste de integração: encerrar a sessão (SIGHUP → 3 s → SIGKILL) não deixa processos do grupo vivos em crates/atlasoq-pty/tests/lifecycle.rs
-- [ ] T024 [P] Teste de integração: processo que gera 50 MB de saída não bloqueia e o snapshot do parser fica consistente em crates/atlasoq-pty/tests/throughput.rs
-- [ ] T025 Definir o trait `SessionHost` (`spawn`, `write`, `resize`, `kill`, `subscribe`, `snapshot`, `screen_text(lines)`) e `SessionSpec` (comando, args, cwd, env, cols, rows) em crates/atlasoq-pty/src/host.rs
-- [ ] T026 Implementar `LocalSessionHost` sobre `portable-pty`, com spawn numa thread dedicada de vida longa, `setsid` e `prctl(PR_SET_PDEATHSIG, SIGHUP)` no filho em crates/atlasoq-pty/src/local.rs
-- [ ] T027 Implementar a thread de leitura por sessão alimentando o parser `vt100` (scrollback padrão de 10.000 linhas) e um buffer de envio agrupado a cada ~16 ms em crates/atlasoq-pty/src/reader.rs
-- [ ] T028 Implementar `screen_text(lines)` sem ANSI e a leitura do modo bracketed paste (2004) a partir do parser em crates/atlasoq-pty/src/screen.rs
-- [ ] T029 Implementar o detector de atividade: `working` com saída nos últimos 2 s, `idle` após 3 s sem saída (configurável), `exited(code)`, e marcação de "última tecla do usuário" em crates/atlasoq-pty/src/activity.rs
-- [ ] T030 Implementar encerramento de todas as sessões (SIGHUP ao grupo, espera de 3 s, SIGKILL) usado no fechamento do app em crates/atlasoq-pty/src/shutdown.rs
+- [X] T021 [P] Teste de integração: spawn de `sh -c 'printf ok'` captura a saída e o código de saída 0 em crates/atlasoq-pty/tests/spawn.rs
+- [X] T022 [P] Teste de integração: `resize(cols, rows)` é refletido em `stty size` do processo em crates/atlasoq-pty/tests/resize.rs
+- [X] T023 [P] Teste de integração: encerrar a sessão (SIGHUP → 3 s → SIGKILL) não deixa processos do grupo vivos em crates/atlasoq-pty/tests/lifecycle.rs
+- [X] T024 [P] Teste de integração: processo que gera 50 MB de saída não bloqueia e o snapshot do parser fica consistente em crates/atlasoq-pty/tests/throughput.rs
+- [X] T025 Definir o trait `SessionHost` (`spawn`, `write`, `resize`, `kill`, `subscribe`, `snapshot`, `screen_text(lines)`) e `SessionSpec` (comando, args, cwd, env, cols, rows) em crates/atlasoq-pty/src/host.rs
+- [X] T026 Implementar `LocalSessionHost` sobre `portable-pty`, com spawn numa thread dedicada de vida longa, `setsid` e `prctl(PR_SET_PDEATHSIG, SIGHUP)` no filho em crates/atlasoq-pty/src/local.rs
+- [X] T027 Implementar a thread de leitura por sessão alimentando o parser `vt100` (scrollback padrão de 10.000 linhas) e um buffer de envio agrupado a cada ~16 ms em crates/atlasoq-pty/src/reader.rs
+- [X] T028 Implementar `screen_text(lines)` sem ANSI e a leitura do modo bracketed paste (2004) a partir do parser em crates/atlasoq-pty/src/screen.rs
+- [X] T029 Implementar o detector de atividade: `working` com saída nos últimos 2 s, `idle` após 3 s sem saída (configurável), `exited(code)`, e marcação de "última tecla do usuário" em crates/atlasoq-pty/src/activity.rs
+- [X] T030 Implementar encerramento de todas as sessões (SIGHUP ao grupo, espera de 3 s, SIGKILL) usado no fechamento do app em crates/atlasoq-pty/src/shutdown.rs
 
 ### Núcleo de armazenamento (atlasoq-store) — testes primeiro
 
