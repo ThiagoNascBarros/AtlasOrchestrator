@@ -640,3 +640,24 @@ button:focus-visible {
 .conn-state-auto_paused {
   color: var(--accent-2);
 }
+
+/* Aprendizado */
+.learn {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
+
+.learn-pending {
+  color: var(--muted);
+}
+
+.learn-done {
+  color: var(--accent);
+}
+
+.learn-failed {
+  color: var(--danger);
+}

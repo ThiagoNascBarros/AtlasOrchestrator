@@ -37,6 +37,11 @@ export const t = {
     exited: (code: number | null | undefined) =>
       code === null || code === undefined ? "encerrado" : `encerrado (código ${code})`,
   },
+  learn: {
+    pending: "aprendendo…",
+    done: "pronto",
+    failed: (reason: string) => `aprendizado falhou: ${reason}`,
+  },
   connection: {
     port: "Arraste até outro agente para conectar",
     direction: "Direção",

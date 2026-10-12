@@ -3,18 +3,29 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use atlasoq_link::{socket_path, Broker, Host, LinkEvent, NodeInfo, Server, SessionInfo};
+use atlasoq_link::{
+    socket_path, Broker, Host, LearnFiles, LinkEvent, NodeInfo, Server, SessionInfo,
+};
 use atlasoq_pty::{Activity, SessionHost};
-use atlasoq_store::{ConnState, Connection, Node, PauseReason};
+use atlasoq_store::{ConnState, Connection, Node, PauseReason, Workspace};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager};
 
-use crate::state::AppState;
+use crate::state::{AppState, OpenWorkspace};
 
 /// Mudança de estado de uma conexão (pausa automática, retomada).
 pub const EVENT_CONNECTION: &str = "connection-changed";
 /// Uma mensagem passou por uma conexão (a UI anima a linha).
 pub const EVENT_LINK_MESSAGE: &str = "link-message";
+/// Estado do aprendizado de um agente (`pending`, `done`, `failed`, `off`).
+pub const EVENT_LEARN: &str = "learn-state";
+
+#[derive(Clone, Serialize)]
+struct LearnEvent {
+    node_id: String,
+    status: &'static str,
+    reason: Option<String>,
+}
 
 #[derive(Clone, Serialize)]
 struct MessageEvent {
@@ -41,26 +52,49 @@ impl AppHost {
     }
 }
 
+/// Nós do workspace no formato do broker.
+pub fn node_infos(ws: &Workspace) -> Vec<NodeInfo> {
+    ws.nodes
+        .iter()
+        .map(|n| NodeInfo {
+            id: n.id().to_owned(),
+            name: n.name().as_str().to_owned(),
+            role: match n {
+                Node::Agent(a) => a.role.clone(),
+                Node::Note(_) => String::new(),
+            },
+            is_note: n.is_note(),
+        })
+        .collect()
+}
+
+/// Regras do time e memória de um agente, lidas do `.atlasoq/` do workspace.
+pub fn learn_files(open: &OpenWorkspace, agent_name: &str) -> LearnFiles {
+    LearnFiles::read(
+        &open.dir.learn_md(),
+        &open.dir.memory_dir().join(format!("{agent_name}.md")),
+    )
+}
+
 impl Host for AppHost {
     fn nodes(&self) -> Vec<NodeInfo> {
         self.state()
             .workspace()
             .as_ref()
-            .map(|o| {
-                o.ws.nodes
-                    .iter()
-                    .map(|n| NodeInfo {
-                        id: n.id().to_owned(),
-                        name: n.name().as_str().to_owned(),
-                        role: match n {
-                            Node::Agent(a) => a.role.clone(),
-                            Node::Note(_) => String::new(),
-                        },
-                        is_note: n.is_note(),
-                    })
-                    .collect()
-            })
+            .map(|o| node_infos(&o.ws))
             .unwrap_or_default()
+    }
+
+    fn learn_files(&self, node_id: &str) -> LearnFiles {
+        let state = self.state();
+        let guard = state.workspace();
+        match guard.as_ref() {
+            Some(open) => match open.ws.node(node_id) {
+                Some(n) => learn_files(open, n.name().as_str()),
+                None => LearnFiles::default(),
+            },
+            None => LearnFiles::default(),
+        }
     }
 
     fn connections(&self) -> Vec<Connection> {
@@ -128,21 +162,38 @@ impl Host for AppHost {
     }
 
     fn emit(&self, event: LinkEvent) {
-        let LinkEvent::Message {
-            conn_id,
-            from_id,
-            to_id,
-            kind,
-        } = event;
-        let _ = self.app.emit(
-            EVENT_LINK_MESSAGE,
-            MessageEvent {
+        match event {
+            LinkEvent::Message {
                 conn_id,
                 from_id,
                 to_id,
                 kind,
-            },
-        );
+            } => {
+                let _ = self.app.emit(
+                    EVENT_LINK_MESSAGE,
+                    MessageEvent {
+                        conn_id,
+                        from_id,
+                        to_id,
+                        kind,
+                    },
+                );
+            }
+            LinkEvent::Learn {
+                node_id,
+                status,
+                reason,
+            } => {
+                let _ = self.app.emit(
+                    EVENT_LEARN,
+                    LearnEvent {
+                        node_id,
+                        status,
+                        reason,
+                    },
+                );
+            }
+        }
     }
 }
 

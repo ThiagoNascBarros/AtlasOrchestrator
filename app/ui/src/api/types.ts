@@ -145,3 +145,11 @@ export interface HistoryEntry {
   text?: string;
   result?: string;
 }
+
+export type LearnStatus = "pending" | "done" | "failed" | "off";
+
+export interface LearnEvent {
+  node_id: string;
+  status: LearnStatus;
+  reason?: string | null;
+}

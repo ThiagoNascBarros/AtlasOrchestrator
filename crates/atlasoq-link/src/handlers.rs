@@ -59,7 +59,8 @@ impl Broker {
                 timeout_s,
             } => self.op_ask(&me, &to, &text, timeout_s),
             Op::Reply { to, text } => self.op_reply(&me, to, &text),
-            Op::Learn { .. } | Op::NoteRead { .. } | Op::NoteAppend { .. } => fail(
+            Op::Learn { hook } => self.op_learn(&me, hook),
+            Op::NoteRead { .. } | Op::NoteAppend { .. } => fail(
                 ErrorKind::BadRequest,
                 i18n::bad_request("este comando ainda não está disponível nesta versão"),
             ),
@@ -481,6 +482,14 @@ impl Broker {
         );
         self.flow(&conn_id, me, &asker, "reply");
         Response::ok(json!({ "to": asker.name }))
+    }
+
+    /// `atlasoq learn`: devolve o texto de aprendizado. Com `--hook`, marca o aprendizado concluído.
+    fn op_learn(&self, me: &NodeInfo, hook: bool) -> Response {
+        if hook {
+            self.learn_done(&me.id);
+        }
+        Response::ok(json!({ "text": self.learn_text(me) }))
     }
 
     fn op_list(&self, me: &NodeInfo) -> Response {

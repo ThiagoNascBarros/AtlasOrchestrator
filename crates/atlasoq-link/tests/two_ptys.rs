@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use atlasoq_core::{ErrorKind, Request, Response};
-use atlasoq_link::{Broker, Host, LinkEvent, NodeInfo, SessionInfo};
+use atlasoq_link::{Broker, Host, LearnFiles, LinkEvent, NodeInfo, SessionInfo};
 use atlasoq_pty::{Activity, LocalSessionHost, SessionHost, SessionSpec};
 use atlasoq_store::{ConnState, Connection, ConnectionLimits, Direction, PauseReason};
 use serde_json::json;
@@ -58,6 +58,9 @@ impl Host for PtyHost {
             c.state = state;
             c.pause_reason = reason;
         }
+    }
+    fn learn_files(&self, _: &str) -> LearnFiles {
+        LearnFiles::default()
     }
     fn logs_dir(&self) -> Option<PathBuf> {
         None

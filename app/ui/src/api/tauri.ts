@@ -8,6 +8,7 @@ import type {
   Connection,
   Direction,
   HistoryEntry,
+  LearnEvent,
   LinkMessageEvent,
   NewAgent,
   Profile,
@@ -68,6 +69,8 @@ export const events = {
     listen<Connection>("connection-changed", (e) => cb(e.payload)),
   linkMessage: (cb: (e: LinkMessageEvent) => void): Promise<UnlistenFn> =>
     listen<LinkMessageEvent>("link-message", (e) => cb(e.payload)),
+  learnState: (cb: (e: LearnEvent) => void): Promise<UnlistenFn> =>
+    listen<LearnEvent>("learn-state", (e) => cb(e.payload)),
   agentSession: (cb: (agentId: string) => void): Promise<UnlistenFn> =>
     listen<string>("agent-session", (e) => cb(e.payload)),
 };

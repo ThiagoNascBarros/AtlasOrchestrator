@@ -9,6 +9,8 @@ import type {
   CanvasNode,
   Connection,
   Direction,
+  LearnEvent,
+  LearnStatus,
   NewAgent,
   Rect,
   Viewport,
@@ -45,6 +47,8 @@ interface UiState {
   nodes: CanvasNode[];
   connections: Connection[];
   pulses: Pulse[];
+  /** Aprendizado de cada agente (selo no nó). */
+  learn: Record<string, { status: LearnStatus; reason?: string | null }>;
   /** Linha sendo arrastada de um agente para outro (coordenadas do mundo). */
   draft: { fromId: string; x: number; y: number } | null;
   /** Conexão com o menu aberto e conexão com o histórico aberto. */
@@ -74,6 +78,7 @@ interface UiState {
   undo(): Promise<void>;
   redo(): Promise<void>;
   upsertConnection(c: Connection): void;
+  setLearn(e: LearnEvent): void;
   connect(fromId: string, toId: string): Promise<void>;
   setDirection(id: string, d: Direction): Promise<void>;
   pauseConnection(id: string): Promise<void>;
@@ -129,6 +134,7 @@ export const useUi = create<UiState>((set, get) => ({
   nodes: [],
   connections: [],
   pulses: [],
+  learn: {},
   draft: null,
   menuConn: null,
   historyConn: null,
@@ -287,6 +293,11 @@ export const useUi = create<UiState>((set, get) => ({
       set({ error: errorText(e) });
     }
   },
+
+  setLearn: (e) =>
+    set((s) => ({
+      learn: { ...s.learn, [e.node_id]: { status: e.status, reason: e.reason } },
+    })),
 
   upsertConnection: (c) =>
     set((s) => ({

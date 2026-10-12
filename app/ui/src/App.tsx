@@ -26,6 +26,7 @@ export function App() {
       ),
       events.agentSession((id) => useUi.getState().bumpSession(id)),
       events.linkMessage((e) => useUi.getState().addPulse(e.conn_id, e.from_id)),
+      events.learnState((e) => useUi.getState().setLearn(e)),
       events.connectionChanged((c) => {
         const s = useUi.getState();
         const was = s.connections.find((x) => x.id === c.id);

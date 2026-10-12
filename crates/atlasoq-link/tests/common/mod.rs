@@ -3,10 +3,10 @@
 
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use atlasoq_core::{Request, Response};
-use atlasoq_link::{Broker, Host, LinkEvent, NodeInfo, SessionInfo};
+use atlasoq_link::{Broker, Host, LearnFiles, LinkEvent, NodeInfo, SessionInfo};
 use atlasoq_store::{ConnState, Connection, ConnectionLimits, Direction, PauseReason};
 use serde_json::{json, Value};
 
@@ -18,6 +18,11 @@ pub struct FakeHost {
     pub bracketed: bool,
     pub events: Mutex<Vec<LinkEvent>>,
     pub logs: Option<PathBuf>,
+    /// Status reportado para todos os agentes (`idle`, `starting`, `working`).
+    pub status: Mutex<&'static str>,
+    /// Última tecla do usuário em qualquer agente.
+    pub last_input: Mutex<Option<Instant>>,
+    pub files: Mutex<LearnFiles>,
 }
 
 pub fn agent(id: &str, name: &str) -> NodeInfo {
@@ -60,6 +65,9 @@ impl FakeHost {
             bracketed: false,
             events: Mutex::new(vec![]),
             logs: None,
+            status: Mutex::new("idle"),
+            last_input: Mutex::new(None),
+            files: Mutex::new(LearnFiles::default()),
         })
     }
 
@@ -70,6 +78,26 @@ impl FakeHost {
             .iter()
             .filter(|(n, _)| n == node)
             .map(|(_, d)| String::from_utf8_lossy(d).into_owned())
+            .collect()
+    }
+
+    pub fn set_connection_state_for_test(&self, conn_id: &str, state: ConnState) {
+        self.set_connection_state(conn_id, state, None);
+    }
+
+    pub fn learn_events(&self) -> Vec<(String, &'static str, Option<String>)> {
+        self.events
+            .lock()
+            .unwrap()
+            .iter()
+            .filter_map(|e| match e {
+                LinkEvent::Learn {
+                    node_id,
+                    status,
+                    reason,
+                } => Some((node_id.clone(), *status, reason.clone())),
+                _ => None,
+            })
             .collect()
     }
 }
@@ -83,11 +111,16 @@ impl Host for FakeHost {
     }
     fn session(&self, node_id: &str) -> Option<SessionInfo> {
         let exited = self.exited.lock().unwrap().iter().any(|n| n == node_id);
+        let status = if exited {
+            "exited"
+        } else {
+            *self.status.lock().unwrap()
+        };
         Some(SessionInfo {
-            status: if exited { "exited" } else { "idle" },
+            status,
             exited,
             bracketed_paste: self.bracketed,
-            last_user_input: None,
+            last_user_input: *self.last_input.lock().unwrap(),
         })
     }
     fn write(&self, node_id: &str, data: &[u8]) -> Result<(), String> {
@@ -111,6 +144,9 @@ impl Host for FakeHost {
             c.state = state;
             c.pause_reason = reason;
         }
+    }
+    fn learn_files(&self, _node_id: &str) -> LearnFiles {
+        self.files.lock().unwrap().clone()
     }
     fn logs_dir(&self) -> Option<PathBuf> {
         self.logs.clone()
@@ -137,10 +173,4 @@ pub fn call(b: &Broker, node: &str, token: &str, op: &str, args: Value) -> Respo
     // Garante que o formato da requisição é o do contrato.
     let _: Request = serde_json::from_str(&line).expect("requisição válida");
     b.handle(&line)
-}
-
-impl FakeHost {
-    pub fn set_connection_state_for_test(&self, conn_id: &str, state: ConnState) {
-        self.set_connection_state(conn_id, state, None);
-    }
 }

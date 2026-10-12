@@ -7,6 +7,7 @@ import { t } from "../i18n/pt-BR";
 import { startConnect } from "../connections/connect";
 import { errorText, useUi } from "../store";
 import { AgentCard } from "./AgentCard";
+import { LearnBadge } from "./LearnBadge";
 import { TerminalView } from "./Terminal";
 
 export function StatusPill({ agentId }: { agentId: string }) {
@@ -32,6 +33,7 @@ export function AgentNode({ agent, lod }: { agent: Agent; lod: boolean }) {
       <span className="node-name">{agent.name}</span>
       {agent.role && <span className="node-role">{agent.role}</span>}
       <StatusPill agentId={agent.id} />
+      <LearnBadge agentId={agent.id} />
       <span className="node-cwd" title={agent.terminal.cwd}>
         {agent.terminal.cwd}
       </span>

@@ -14,6 +14,9 @@ use crate::ask::AskTable;
 use crate::audit::{self, AuditEvent};
 use crate::auth::TokenStore;
 use crate::delivery::{Queues, SUBMIT_DELAY};
+use crate::learn::LearnState;
+use crate::learn::LearnTable;
+use crate::learn_content::LearnFiles;
 use crate::loop_guard::LoopGuard;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -42,6 +45,12 @@ pub enum LinkEvent {
         to_id: String,
         kind: &'static str,
     },
+    /// Estado do aprendizado de um agente mudou (`pending`, `done`, `failed`, `off`).
+    Learn {
+        node_id: String,
+        status: &'static str,
+        reason: Option<String>,
+    },
 }
 
 /// O que o broker precisa do app: workspace, sessões e saída para a UI.
@@ -52,6 +61,8 @@ pub trait Host: Send + Sync {
     fn write(&self, node_id: &str, data: &[u8]) -> Result<(), String>;
     fn screen_text(&self, node_id: &str, lines: usize) -> Result<String, String>;
     fn set_connection_state(&self, conn_id: &str, state: ConnState, reason: Option<PauseReason>);
+    /// Regras do time e memória do agente, como estão no disco agora.
+    fn learn_files(&self, node_id: &str) -> LearnFiles;
     fn logs_dir(&self) -> Option<PathBuf>;
     fn emit(&self, event: LinkEvent);
 }
@@ -62,6 +73,7 @@ pub struct Broker {
     pub(crate) guards: Mutex<HashMap<String, LoopGuard>>,
     pub(crate) asks: AskTable,
     pub(crate) queues: Queues,
+    pub(crate) learn: Mutex<LearnTable>,
     pub(crate) next_msg: AtomicU64,
     pub(crate) closing: AtomicBool,
     pub(crate) submit_delay: Duration,
@@ -81,6 +93,7 @@ impl Broker {
             guards: Mutex::new(HashMap::new()),
             asks: AskTable::default(),
             queues: Queues::default(),
+            learn: Mutex::new(LearnTable::default()),
             next_msg: AtomicU64::new(1),
             closing: AtomicBool::new(false),
             submit_delay,
@@ -103,8 +116,18 @@ impl Broker {
             .cancel_where(|c, _, _| c == conn_id, kind, message);
     }
 
-    /// Um agente foi encerrado ou apagado: perguntas que dependem dele terminam.
+    pub(crate) fn next_msg_id(&self) -> u64 {
+        self.next_msg.fetch_add(1, Ordering::SeqCst)
+    }
+
+    /// Um agente foi encerrado ou apagado: perguntas que dependem dele terminam, e o
+    /// aprendizado que ainda estava em curso falha.
     pub fn node_stopped(&self, node_id: &str) {
+        self.set_state(
+            node_id,
+            None,
+            LearnState::Failed("o agente encerrou antes de aprender".into()),
+        );
         self.asks.cancel_where(
             |_, from, to| from == node_id || to == node_id,
             ErrorKind::TargetExited,
@@ -128,6 +151,16 @@ impl Broker {
         if let Some(dir) = self.host.logs_dir() {
             audit::append(&dir, ev);
         }
+    }
+
+    /// Texto de aprendizado do agente `me`, montado com o estado atual do workspace.
+    pub fn learn_text(&self, me: &NodeInfo) -> String {
+        crate::learn_content::text_for(
+            me,
+            &self.host.nodes(),
+            &self.host.connections(),
+            &self.host.learn_files(&me.id),
+        )
     }
 
     pub fn history(&self, conn_id: &str, limit: usize) -> Vec<serde_json::Value> {

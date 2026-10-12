@@ -182,23 +182,23 @@ e teste por modo de hook (FR-030), sanitização (SC-006), encerramento forçado
 ### Tests for User Story 3
 
 - [ ] T082 [P] [US3] Criar CLIs falsas que registram o que receberam (via hook `SessionStart` simulado, argumento de prompt e entrada digitada) em tests/fake-agents/
-- [ ] T083 [P] [US3] Teste por modo: agente recém-criado recebe o conteúdo de aprendizado em `hook`, `prompt` e `type` em até 30 s após ficar pronto (SC-002a); `off` não recebe; falha por tempo-limite marca `failed`; a entrega do modo `type` aparece no log como mensagem do app em tests/integration/learn_modes.rs
-- [ ] T140 [P] [US3] Testes de contrato de `atlasoq learn` (normal, `--hook`, fora do app com código 0, limite de 9.000 caracteres) e de `atlasoq help` com exemplo de cada comando em crates/atlasoq-cli/tests/contract_learn.rs
+- [x] T083 [P] [US3] Teste por modo: agente recém-criado recebe o conteúdo de aprendizado em `hook`, `prompt` e `type` em até 30 s após ficar pronto (SC-002a); `off` não recebe; falha por tempo-limite marca `failed`; a entrega do modo `type` aparece no log como mensagem do app em tests/integration/learn_modes.rs
+- [x] T140 [P] [US3] Testes de contrato de `atlasoq learn` (normal, `--hook`, fora do app com código 0, limite de 9.000 caracteres) e de `atlasoq help` com exemplo de cada comando em crates/atlasoq-cli/tests/contract_learn.rs
 - [ ] T084 [P] [US3] Teste do tutorial: extrai cada bloco de exemplo de docs/agentes/tutorial.md e executa contra dois agentes conectados, verificando o efeito; falha se o tutorial passar de 60 linhas (SC-003) em tests/tutorial/run_examples.rs
 - [ ] T085 [P] [US3] Teste de que o hook não escreve fora de `.atlasoq/` (snapshot do diretório raiz antes e depois) em tests/integration/learn_no_side_effects.rs
 
 ### Implementation for User Story 3
 
-- [ ] T086 [P] [US3] Escrever o tutorial para agentes (≤ 60 linhas, afirmações factuais, `list` primeiro, um exemplo por comando, `reply` para perguntas, regras, erros comuns) conforme o esqueleto de contracts/cli.md em docs/agentes/tutorial.md
-- [ ] T087 [P] [US3] Escrever o guia para usuários com receitas (coordenador → executores, executor ↔ revisor, nota de plano compartilhada, como escrever papéis, como liberar `atlasoq` nas permissões de cada CLI) em docs/guia-orquestracao.md
-- [ ] T088 [US3] Montar o conteúdo de aprendizado na ordem do contrato (identidade, conexões, tutorial, `learn.md` até 4 KiB, espaço para memória), limitado a 9.000 caracteres em crates/atlasoq-link/src/learn_content.rs
-- [ ] T089 [US3] Implementar o handler `learn` (normal e `--hook`, que registra `learn: done`) e o comando `atlasoq learn` com o tutorial embutido via `include_str!` e saída genérica fora do app em crates/atlasoq-link/src/handlers.rs e crates/atlasoq-cli/src/commands/learn.rs
-- [ ] T090 [US3] Implementar o modo `hook`: gerar `.atlasoq/agents/<nome>/claude-settings.json` com `SessionStart` (matchers `startup`, `resume`, `clear`, `compact`) → `atlasoq learn --hook` e `permissions.allow` para `atlasoq`, e acrescentar `--settings <arquivo>` ao comando em crates/atlasoq-link/src/learn_hook.rs
-- [ ] T091 [US3] Implementar o modo `prompt`: passar o conteúdo de aprendizado como argumento de prompt inicial conforme o perfil (ex.: `codex "<texto>"`, `gemini --prompt-interactive "<texto>"`, `opencode --prompt "<texto>"`) em crates/atlasoq-link/src/learn_prompt.rs
-- [ ] T092 [US3] Implementar o modo `type`: esperar a primeira transição para `idle` (≤ `ready_timeout_s`, padrão 60), não entregar se o usuário digitou nos últimos 2 s, entregar pelo caminho normal de mensagens em crates/atlasoq-link/src/learn_type.rs
-- [ ] T093 [US3] Implementar `LearnState` (`pending`, `done`, `failed(motivo)`, `off`), disparo ao criar, reiniciar e reabrir, e registro no log em crates/atlasoq-link/src/learn.rs
-- [ ] T094 [US3] Mostrar o estado do aprendizado no nó (`aprendendo…`, `pronto`, `aprendizado falhou: <motivo>`) em app/ui/src/nodes/LearnBadge.tsx
-- [ ] T095 [US3] Implementar `atlasoq help [comando]` com uso e exemplo de cada um dos 8 comandos em crates/atlasoq-cli/src/commands/help.rs
+- [x] T086 [P] [US3] Escrever o tutorial para agentes (≤ 60 linhas, afirmações factuais, `list` primeiro, um exemplo por comando, `reply` para perguntas, regras, erros comuns) conforme o esqueleto de contracts/cli.md em docs/agentes/tutorial.md
+- [x] T087 [P] [US3] Escrever o guia para usuários com receitas (coordenador → executores, executor ↔ revisor, nota de plano compartilhada, como escrever papéis, como liberar `atlasoq` nas permissões de cada CLI) em docs/guia-orquestracao.md
+- [x] T088 [US3] Montar o conteúdo de aprendizado na ordem do contrato (identidade, conexões, tutorial, `learn.md` até 4 KiB, espaço para memória), limitado a 9.000 caracteres em crates/atlasoq-link/src/learn_content.rs
+- [x] T089 [US3] Implementar o handler `learn` (normal e `--hook`, que registra `learn: done`) e o comando `atlasoq learn` com o tutorial embutido via `include_str!` e saída genérica fora do app em crates/atlasoq-link/src/handlers.rs e crates/atlasoq-cli/src/commands/learn.rs
+- [x] T090 [US3] Implementar o modo `hook`: gerar `.atlasoq/agents/<nome>/claude-settings.json` com `SessionStart` (matchers `startup`, `resume`, `clear`, `compact`) → `atlasoq learn --hook` e `permissions.allow` para `atlasoq`, e acrescentar `--settings <arquivo>` ao comando em crates/atlasoq-link/src/learn_hook.rs
+- [x] T091 [US3] Implementar o modo `prompt`: passar o conteúdo de aprendizado como argumento de prompt inicial conforme o perfil (ex.: `codex "<texto>"`, `gemini --prompt-interactive "<texto>"`, `opencode --prompt "<texto>"`) em crates/atlasoq-link/src/learn_prompt.rs
+- [x] T092 [US3] Implementar o modo `type`: esperar a primeira transição para `idle` (≤ `ready_timeout_s`, padrão 60), não entregar se o usuário digitou nos últimos 2 s, entregar pelo caminho normal de mensagens em crates/atlasoq-link/src/learn_type.rs
+- [x] T093 [US3] Implementar `LearnState` (`pending`, `done`, `failed(motivo)`, `off`), disparo ao criar, reiniciar e reabrir, e registro no log em crates/atlasoq-link/src/learn.rs
+- [x] T094 [US3] Mostrar o estado do aprendizado no nó (`aprendendo…`, `pronto`, `aprendizado falhou: <motivo>`) em app/ui/src/nodes/LearnBadge.tsx
+- [x] T095 [US3] Implementar `atlasoq help [comando]` com uso e exemplo de cada um dos 8 comandos em crates/atlasoq-cli/src/commands/help.rs
 
 **Checkpoint**: US1–US3 entregam o núcleo do orquestrador: agentes que nascem prontos para conversar.
 

@@ -9,6 +9,9 @@ use serde_json::{json, Value};
 use crate::client::{self, Env};
 use crate::{suggest, usage};
 
+/// Tutorial genérico, mostrado fora de um agente do app (contracts/cli.md).
+const GENERIC_TUTORIAL: &str = include_str!("../../../docs/agentes/tutorial.md");
+
 const OK: i32 = 0;
 const USAGE: i32 = 2;
 const UNAVAILABLE: i32 = 4;
@@ -143,7 +146,23 @@ pub fn run(
             };
         }
         "learn" => {
-            let _ = write!(out, "{}", include_str!("tutorial.txt"));
+            // Dentro do app, o texto é o de aprendizado do agente; fora, o tutorial genérico.
+            let from_app = match (env(ENV_SOCKET), env(ENV_NODE_ID), env(ENV_NODE_TOKEN)) {
+                (Some(socket), Some(node), Some(token)) => {
+                    let env = Env {
+                        socket,
+                        node,
+                        token,
+                    };
+                    client::call(&env, "learn", json!({ "hook": parsed.hook }))
+                        .ok()
+                        .filter(|r| r.ok)
+                        .and_then(|r| r.data)
+                        .and_then(|d| d["text"].as_str().map(str::to_owned))
+                }
+                _ => None,
+            };
+            let _ = write!(out, "{}", from_app.as_deref().unwrap_or(GENERIC_TUTORIAL));
             return OK;
         }
         _ => {}
