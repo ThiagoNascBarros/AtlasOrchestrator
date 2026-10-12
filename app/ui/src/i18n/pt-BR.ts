@@ -1,0 +1,61 @@
+// Textos da interface (pt-BR). Centralizados para tradução futura (research.md R15).
+export const t = {
+  appName: "AtlasOQ",
+  start: {
+    title: "Orquestre seus agentes de IA num canvas",
+    newWorkspace: "Novo workspace",
+    openWorkspace: "Abrir workspace",
+    chooseFolder: "Escolher pasta",
+    folderLabel: "Pasta do projeto",
+    nameLabel: "Nome do workspace",
+    recent: "Recentes",
+    noRecent: "Nenhum workspace aberto ainda.",
+    create: "Criar",
+    open: "Abrir",
+    cancel: "Cancelar",
+  },
+  toolbar: {
+    newAgent: "Novo agente",
+    frameAll: "Enquadrar tudo",
+    frameSelection: "Enquadrar seleção",
+    grid: "Grade",
+    undo: "Desfazer",
+    redo: "Refazer",
+    close: "Fechar workspace",
+  },
+  agent: {
+    restart: "Reiniciar",
+    duplicate: "Duplicar",
+    stop: "Encerrar",
+    remove: "Apagar",
+    menu: "Ações do agente",
+  },
+  status: {
+    starting: "iniciando",
+    working: "trabalhando",
+    idle: "ocioso",
+    exited: (code: number | null | undefined) =>
+      code === null || code === undefined ? "encerrado" : `encerrado (código ${code})`,
+  },
+  newAgent: {
+    title: "Novo agente",
+    profile: "Perfil",
+    name: "Nome",
+    nameHint: "letras minúsculas, números e hífen (ex.: coder)",
+    role: "Papel (opcional)",
+    rolePlaceholder: "ex.: implementa as tarefas",
+    cwd: "Diretório (relativo à pasta do workspace)",
+    env: "Variáveis de ambiente (uma por linha, NOME=valor)",
+    secrets: "Variáveis secretas (nomes separados por vírgula; o valor nunca é salvo)",
+    create: "Criar agente",
+  },
+  focus: {
+    canvas: "Canvas",
+    selected: "Selecionado",
+    terminal: "Terminal — Esc Esc volta ao canvas",
+    note: "Nota",
+  },
+  errors: {
+    generic: "Algo deu errado",
+  },
+} as const;

@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   clearScreen: false,
   server: { port: 1420, strictPort: true },
-  build: { target: "es2022", sourcemap: true },
+  build: { target: "es2022", sourcemap: true, chunkSizeWarningLimit: 2000 },
   test: {
     environment: "jsdom",
     globals: true,

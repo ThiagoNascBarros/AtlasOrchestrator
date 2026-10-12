@@ -9,6 +9,10 @@ export default tseslint.config(
   {
     files: ["**/*.{ts,tsx}"],
     plugins: { "react-hooks": reactHooks },
-    rules: reactHooks.configs.recommended.rules,
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      // Asserções `!` são usadas onde o invariante é garantido pelo código ao redor.
+      "@typescript-eslint/no-non-null-assertion": "off",
+    },
   },
 );

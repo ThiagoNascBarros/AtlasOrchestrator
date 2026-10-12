@@ -97,8 +97,8 @@ e teste por modo de hook (FR-030), sanitização (SC-006), encerramento forçado
 - [X] T040 Implementar o estado do app (workspace aberto, `LocalSessionHost`, autosave) e os comandos Tauri `workspace_create`, `workspace_open`, `workspace_recent` em app/src-tauri/src/state.rs e app/src-tauri/src/commands/workspace.rs
 - [X] T041 Implementar streaming de saída por sessão via `tauri::ipc::Channel` binário e os comandos `session_write`, `session_resize`, `session_snapshot` em app/src-tauri/src/commands/session.rs
 - [X] T042 Encerrar todas as sessões no fechamento da janela e no sinal de término do app em app/src-tauri/src/lifecycle.rs
-- [ ] T043 [P] Criar o store Zustand com padrão de comandos (aplicar/desfazer) e cliente tipado dos comandos Tauri em app/ui/src/store/index.ts e app/ui/src/store/tauri.ts
-- [ ] T044 [P] Carregar o catálogo de textos pt-BR da UI em app/ui/src/i18n/pt-BR.ts
+- [X] T043 [P] Criar o store Zustand com padrão de comandos (aplicar/desfazer) e cliente tipado dos comandos Tauri em app/ui/src/store/index.ts e app/ui/src/store/tauri.ts
+- [X] T044 [P] Carregar o catálogo de textos pt-BR da UI em app/ui/src/i18n/pt-BR.ts
 
 **Checkpoint**: terminais reais funcionam pela camada PTY com testes verdes; workspace é criado e salvo em `.atlasoq/`.
 
@@ -112,24 +112,24 @@ e teste por modo de hook (FR-030), sanitização (SC-006), encerramento forçado
 
 ### Tests for User Story 1
 
-- [ ] T045 [P] [US1] Testes Vitest da geometria do viewport (zoom 10%–400% centrado no cursor, conversão tela↔mundo) em app/ui/tests/canvas/viewport.test.ts
-- [ ] T046 [P] [US1] Testes Vitest da máquina de foco (`Canvas` → `NóSelecionado` → `TerminalComFoco`/`NotaEditando`; `Esc Esc` e clique no fundo voltam ao canvas) em app/ui/tests/focus/focus.test.ts
+- [X] T045 [P] [US1] Testes Vitest da geometria do viewport (zoom 10%–400% centrado no cursor, conversão tela↔mundo) em app/ui/tests/canvas/viewport.test.ts
+- [X] T046 [P] [US1] Testes Vitest da máquina de foco (`Canvas` → `NóSelecionado` → `TerminalComFoco`/`NotaEditando`; `Esc Esc` e clique no fundo voltam ao canvas) em app/ui/tests/focus/focus.test.ts
 - [ ] T047 [P] [US1] Teste E2E: criar agente "Shell" chamado `coder`, digitar `echo oi`, ver a saída, recusar segundo agente `coder` em app/ui/tests/e2e/us1-agents.e2e.ts
 
 ### Implementation for User Story 1
 
-- [ ] T048 [P] [US1] Implementar o viewport com pan (botão do meio, espaço + arrastar, touchpad) e zoom (Ctrl + roda, pinça, `Ctrl+=`, `Ctrl+-`, `Ctrl+0`) entre 10% e 400% em app/ui/src/canvas/Viewport.tsx
-- [ ] T049 [P] [US1] Implementar grade opcional, encaixe na grade, "enquadrar tudo" e "enquadrar seleção" em app/ui/src/canvas/framing.ts
-- [ ] T050 [P] [US1] Implementar o minimapa em app/ui/src/canvas/Minimap.tsx
-- [ ] T051 [US1] Implementar seleção por clique e retângulo, mover, redimensionar, apagar e desfazer/refazer como comandos do store em app/ui/src/canvas/selection.ts
-- [ ] T052 [US1] Implementar a máquina de foco com indicação visual e barra de status em app/ui/src/focus/focusMachine.ts
-- [ ] T053 [US1] Implementar `AgentNode` com xterm.js (addons webgl com fallback DOM, fit, search, web-links, unicode11), barra de título com nome, papel, status, cwd e menu (reiniciar, duplicar, encerrar) em app/ui/src/nodes/AgentNode.tsx
-- [ ] T054 [US1] Implementar a estratégia de zoom de terminais validada no T014 (escala CSS durante o gesto; `fontSize = base × zoom` ao parar, mantendo colunas e linhas) em app/ui/src/nodes/terminalZoom.ts
-- [ ] T055 [US1] Implementar o LOD: abaixo de 35% de zoom ou fora da tela, desmontar o xterm.js e mostrar cartão (nome, papel, status, últimas linhas); remontar a partir de `session_snapshot` em app/ui/src/nodes/AgentCard.tsx
-- [ ] T056 [US1] Implementar o diálogo "novo agente" (perfil, nome único, papel opcional, diretório, variáveis com marcação de secretas) com validação de nome e sugestão de nome alternativo em app/ui/src/nodes/NewAgentDialog.tsx
-- [ ] T057 [US1] Implementar os comandos Tauri `agent_create`, `agent_restart`, `agent_duplicate`, `agent_stop` e o evento de status (`working`/`idle`/`exited`) em app/src-tauri/src/commands/agent.rs
-- [ ] T058 [US1] Implementar clique em `caminho:linha` (abre no `$EDITOR`) e em URL (abre via `xdg-open`) em app/ui/src/nodes/terminalLinks.ts e app/src-tauri/src/commands/open.rs
-- [ ] T059 [US1] Implementar a tela inicial (novo workspace escolhendo pasta, abrir, recentes) em app/ui/src/workspace/StartScreen.tsx
+- [X] T048 [P] [US1] Implementar o viewport com pan (botão do meio, espaço + arrastar, touchpad) e zoom (Ctrl + roda, pinça, `Ctrl+=`, `Ctrl+-`, `Ctrl+0`) entre 10% e 400% em app/ui/src/canvas/Viewport.tsx
+- [X] T049 [P] [US1] Implementar grade opcional, encaixe na grade, "enquadrar tudo" e "enquadrar seleção" em app/ui/src/canvas/framing.ts
+- [X] T050 [P] [US1] Implementar o minimapa em app/ui/src/canvas/Minimap.tsx
+- [X] T051 [US1] Implementar seleção por clique e retângulo, mover, redimensionar, apagar e desfazer/refazer como comandos do store em app/ui/src/canvas/selection.ts
+- [X] T052 [US1] Implementar a máquina de foco com indicação visual e barra de status em app/ui/src/focus/focusMachine.ts
+- [X] T053 [US1] Implementar `AgentNode` com xterm.js (addons webgl com fallback DOM, fit, search, web-links, unicode11), barra de título com nome, papel, status, cwd e menu (reiniciar, duplicar, encerrar) em app/ui/src/nodes/AgentNode.tsx
+- [X] T054 [US1] Implementar a estratégia de zoom de terminais validada no T014 (escala CSS durante o gesto; `fontSize = base × zoom` ao parar, mantendo colunas e linhas) em app/ui/src/nodes/terminalZoom.ts
+- [X] T055 [US1] Implementar o LOD: abaixo de 35% de zoom ou fora da tela, desmontar o xterm.js e mostrar cartão (nome, papel, status, últimas linhas); remontar a partir de `session_snapshot` em app/ui/src/nodes/AgentCard.tsx
+- [X] T056 [US1] Implementar o diálogo "novo agente" (perfil, nome único, papel opcional, diretório, variáveis com marcação de secretas) com validação de nome e sugestão de nome alternativo em app/ui/src/nodes/NewAgentDialog.tsx
+- [X] T057 [US1] Implementar os comandos Tauri `agent_create`, `agent_restart`, `agent_duplicate`, `agent_stop` e o evento de status (`working`/`idle`/`exited`) em app/src-tauri/src/commands/agent.rs
+- [X] T058 [US1] Implementar clique em `caminho:linha` (abre no `$EDITOR`) e em URL (abre via `xdg-open`) em app/ui/src/nodes/terminalLinks.ts e app/src-tauri/src/commands/open.rs
+- [X] T059 [US1] Implementar a tela inicial (novo workspace escolhendo pasta, abrir, recentes) em app/ui/src/workspace/StartScreen.tsx
 
 **Checkpoint**: US1 funciona sozinha: agentes reais no canvas, navegáveis, com status.
 
