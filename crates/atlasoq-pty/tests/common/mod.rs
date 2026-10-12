@@ -30,9 +30,20 @@ pub fn spawn_and_subscribe(
     host: &LocalSessionHost,
     spec: SessionSpec,
 ) -> (SessionId, Receiver<SessionEvent>) {
+    // Assina com `attach`: a tela já produzida chega como primeira `Output`, para que processos
+    // muito rápidos não percam a saída inicial.
     let id = host.spawn(spec).expect("spawn");
-    let rx = host.subscribe(id).expect("subscribe");
-    (id, rx)
+    let (snap, rx) = host.attach(id).expect("attach");
+    let (tx, merged) = std::sync::mpsc::channel();
+    tx.send(SessionEvent::Output(snap.formatted)).unwrap();
+    std::thread::spawn(move || {
+        for ev in rx {
+            if tx.send(ev).is_err() {
+                break;
+            }
+        }
+    });
+    (id, merged)
 }
 
 /// Espera até `cond` ser verdadeira ou estourar o tempo.

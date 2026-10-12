@@ -75,6 +75,9 @@ pub trait SessionHost: Send + Sync {
     /// Encerra o grupo de processos: SIGHUP, espera `grace`, depois SIGKILL.
     fn kill(&self, id: SessionId, grace: Duration) -> Result<(), PtyError>;
     fn subscribe(&self, id: SessionId) -> Result<Receiver<SessionEvent>, PtyError>;
+    /// Tela atual e assinatura que recebe exatamente a saída posterior a ela (sem perder nem
+    /// duplicar bytes). Usado para (re)montar um terminal na UI.
+    fn attach(&self, id: SessionId) -> Result<(Snapshot, Receiver<SessionEvent>), PtyError>;
     fn snapshot(&self, id: SessionId) -> Result<Snapshot, PtyError>;
     /// Últimas `lines` linhas de scrollback + tela, em texto puro.
     fn screen_text(&self, id: SessionId, lines: usize) -> Result<String, PtyError>;

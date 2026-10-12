@@ -61,3 +61,23 @@ fn comando_inexistente_falha_ou_sai_com_erro() {
         }
     }
 }
+
+#[test]
+fn attach_nao_perde_nem_duplica_saida() {
+    let host = LocalSessionHost::default();
+    let (id, _rx) = spawn_and_subscribe(
+        &host,
+        sh("for i in $(seq 1 400); do echo L$i; sleep 0.002; done"),
+    );
+    std::thread::sleep(Duration::from_millis(150));
+    let (snap, rx) = host.attach(id).unwrap();
+    let (rest, code) = collect(&rx, Duration::from_secs(20));
+    assert_eq!(code, Some(Some(0)));
+    // Reproduz snapshot + resto num parser novo e compara com a tela final da sessão.
+    let mut p = vt100::Parser::new(snap.rows, snap.cols, 0);
+    p.process(&snap.formatted);
+    p.process(&rest);
+    let mut expected = vt100::Parser::new(snap.rows, snap.cols, 0);
+    expected.process(&host.snapshot(id).unwrap().formatted);
+    assert_eq!(p.screen().contents(), expected.screen().contents());
+}

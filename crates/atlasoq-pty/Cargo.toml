@@ -14,3 +14,4 @@ libc.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]
+vt100.workspace = true

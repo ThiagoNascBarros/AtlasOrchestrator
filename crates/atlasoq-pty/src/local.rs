@@ -233,8 +233,22 @@ impl SessionHost for LocalSessionHost {
     fn subscribe(&self, id: SessionId) -> Result<Receiver<SessionEvent>, PtyError> {
         let s = self.get(id)?;
         let (tx, rx) = mpsc::channel();
-        s.shared.subscribe(tx);
+        s.shared.subscribe(tx, false);
         Ok(rx)
+    }
+
+    fn attach(&self, id: SessionId) -> Result<(Snapshot, Receiver<SessionEvent>), PtyError> {
+        let s = self.get(id)?;
+        let (tx, rx) = mpsc::channel();
+        let (formatted, cols, rows) = s.shared.subscribe(tx, true).unwrap_or_default();
+        Ok((
+            Snapshot {
+                cols,
+                rows,
+                formatted,
+            },
+            rx,
+        ))
     }
 
     fn snapshot(&self, id: SessionId) -> Result<Snapshot, PtyError> {
