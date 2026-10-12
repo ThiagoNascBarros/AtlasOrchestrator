@@ -38,6 +38,17 @@ Instalação por pacote .deb."
 - **Tutorial para agentes**: texto curto, impresso por `atlasoq learn`, que ensina um agente a
   usar a CLI.
 
+## Clarifications
+
+### Session 2026-10-11
+
+- Q: Quando o app for fechado (ou travar), os processos dos agentes devem continuar rodando no MVP? → A: Não. Os agentes encerram com o app e são reiniciados ao reabrir o workspace (com o hook de aprendizado); daemon de sessões é o primeiro item pós-MVP.
+- Q: Quando um agente usa `atlasoq ask`, de onde vem a resposta do outro agente? → A: Resposta explícita: o destino responde com `atlasoq reply "..."` e o `ask` devolve esse texto; sem resposta até o tempo-limite, o `ask` devolve a leitura da tela com aviso. `me` sai da CLI (a identidade passa a ser o cabeçalho do `list`) e `reply` entra, mantendo 8 comandos.
+- Q: O canvas do MVP deve permitir desenhos (mão livre, setas, retângulos, textos soltos)? → A: Não. O MVP tem só agentes, notas e conexões; qualquer forma de desenho fica para depois do MVP.
+- Q: Ao reabrir um workspace, os agentes devem iniciar sozinhos ou esperar o usuário mandar? → A: Iniciam sozinhos, sempre (a aprovação de workspace de terceiros continua valendo).
+- Diretriz do usuário (mesma sessão): cada agente MUST ter memória de longo prazo própria, guardada no workspace, com o que fez, decisões e pendências, em resumos curtos e com o menor custo de tokens possível. A memória serve para o agente lembrar; ele não deve abrir a sessão perguntando ao usuário se continua a tarefa anterior.
+- Q: A memória de cada agente deve ir para o git junto com o projeto? → A: Configurável por workspace; padrão não versionado (`memory/` no `.gitignore` do `.atlasoq/`), com um botão no app para passar a versionar (remove a linha do `.gitignore`) e voltar atrás.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Montar o time de agentes no canvas (Priority: P1)
@@ -102,8 +113,14 @@ ponto de maior risco de segurança, por isso entra junto da história 1.
    `planner` executa `atlasoq read coder`, **Then** recebe o texto recente da tela do `coder`, sem
    códigos de cor.
 5. **Given** a ligação ativa, **When** o `planner` executa `atlasoq ask coder "qual o resultado?"`,
-   **Then** a mensagem é entregue, o comando espera o `coder` ficar ocioso e devolve o que o `coder`
-   produziu depois da mensagem.
+   **Then** a mensagem chega ao `coder` com a indicação de que é uma pergunta e de como responder
+   (`atlasoq reply "..."`), o comando do `planner` fica esperando e, quando o `coder` executa
+   `atlasoq reply "12 testes passaram"`, o `planner` recebe exatamente esse texto.
+5a. **Given** um `ask` pendente, **When** o destino não responde até o tempo-limite, **Then** o `ask`
+   devolve o texto recente da tela do destino, avisa que não houve `reply` e termina com o código de
+   tempo esgotado.
+5b. **Given** o `coder` sem nenhuma pergunta pendente, **When** ele executa `atlasoq reply "..."`,
+   **Then** o comando falha explicando que não há pergunta para responder e sugere `atlasoq send`.
 6. **Given** a ligação ativa, **When** o usuário pausa ou apaga a ligação, **Then** a próxima
    mensagem é recusada imediatamente, com a explicação do motivo.
 7. **Given** uma mensagem contendo sequências de controle (ESC, Ctrl-C, códigos de cor), **When** ela
@@ -213,21 +230,61 @@ reabrir e comparar o canvas e o conteúdo de `.atlasoq/`.
 2. **Given** um workspace salvo, **When** o app é encerrado à força durante uma alteração, **Then**
    o workspace reabre íntegro, perdendo no máximo a última alteração de layout feita no último
    segundo.
-3. **Given** a opção "perguntar antes de iniciar agentes", **When** o workspace é reaberto,
-   **Then** os agentes aparecem parados com um botão para iniciar todos ou cada um.
+3. **Given** um workspace aprovado nesta máquina, **When** é reaberto, **Then** todos os agentes
+   iniciam sozinhos, sem pergunta, e cada um passa pelo hook de aprendizado.
 4. **Given** um agente configurado com uma variável de ambiente marcada como secreta, **When** o
    workspace é salvo, **Then** o valor dessa variável não aparece em nenhum arquivo do workspace.
 5. **Given** uma nota editada fora do app com o app fechado, **When** o workspace é reaberto,
    **Then** a nota mostra o conteúdo novo.
 6. **Given** uma pasta de projeto, **When** o usuário cria um workspace nela, **Then** o app cria
    `<pasta>/.atlasoq/` com os arquivos versionáveis (workspace, notas, perfis) e um `.gitignore`
-   próprio que exclui logs, backups e arquivos gerados por agente.
+   próprio que exclui logs, backups, arquivos gerados por agente e memórias.
+6a. **Given** um workspace com memória não versionada, **When** o usuário clica em "Versionar
+   memória", **Then** `memory/` sai do `.atlasoq/.gitignore` e as memórias passam a aparecer no
+   `git status`; "Parar de versionar" recoloca a linha e avisa sobre o histórico já commitado.
 7. **Given** um `.atlasoq/` vindo de um repositório clonado, **When** o usuário abre o workspace pela
    primeira vez, **Then** o app mostra os comandos, perfis, hooks e instruções que seriam
    executados e só inicia os agentes depois da aprovação; se esses itens mudarem depois, pede
    aprovação de novo.
 8. **Given** o arquivo principal do workspace corrompido, **When** o app tenta abri-lo, **Then**
    oferece restaurar a cópia válida mais recente.
+
+---
+
+### User Story 7 - Agentes com memória de longo prazo (Priority: P2)
+
+Como usuário, quero que cada agente lembre o que fez nos dias anteriores, quais decisões tomou e o
+que ficou pendente, sem que eu precise recontar e sem gastar muitos tokens. Durante o trabalho, o
+agente anota resumos curtos na própria memória; quando ele nasce de novo (no dia seguinte, depois
+de reiniciar ou de reabrir o workspace), recebe as últimas anotações junto com o tutorial e segue
+trabalhando sabendo onde parou.
+
+**Why this priority**: sem memória, cada reinício (que no MVP acontece sempre que o app fecha)
+apaga o contexto do agente. Fica em P2 porque o canvas e a conversa entre agentes funcionam sem ela.
+
+**Independent Test**: criar o agente `coder`, fazer ele registrar duas anotações, fechar o app,
+reabrir e verificar que o `coder` recebeu as anotações ao nascer e consegue dizer o que fez antes.
+
+**Acceptance Scenarios**:
+
+1. **Given** um agente que concluiu uma tarefa, **When** ele executa
+   `atlasoq note memory "feito: validação de login com testes"`, **Then** a linha é gravada na
+   memória dele, com data e hora, no workspace.
+2. **Given** um agente com anotações na memória, **When** ele nasce de novo (reinício, reabertura do
+   workspace ou outro dia), **Then** o hook de inicialização entrega, junto com o tutorial, apenas
+   as últimas anotações dentro do limite de tamanho, sem nenhuma ação do usuário.
+3. **Given** um agente que recebeu a memória ao nascer, **When** começa a trabalhar, **Then** ele não
+   abre a sessão perguntando ao usuário se deve continuar a tarefa anterior; a memória serve como
+   lembrança, e quem decide o próximo passo é o usuário ou quem orquestra.
+4. **Given** uma memória maior que o limite de entrega, **When** o agente nasce, **Then** recebe só as
+   anotações mais recentes e um aviso de que há mais; pode ler tudo com `atlasoq note memory`.
+5. **Given** o agente `planner`, **When** ele tenta ler a memória do `coder`, **Then** a operação é
+   recusada; cada agente só lê e escreve a própria memória.
+6. **Given** um agente no canvas, **When** o usuário abre a memória pelo nó, **Then** vê todas as
+   anotações e pode editá-las ou apagá-las.
+7. **Given** um agente renomeado, **When** o nome muda, **Then** a memória acompanha o novo nome.
+   **Given** um agente apagado, **When** o usuário confirma, **Then** o app pergunta se mantém a
+   memória (padrão: manter, para um agente futuro com o mesmo nome).
 
 ---
 
@@ -241,7 +298,7 @@ configuração.
 podem ser testadas a partir do build de desenvolvimento.
 
 **Independent Test**: instalar o `.deb` numa máquina limpa, abrir pelo menu, criar um agente e
-rodar `atlasoq me`; depois desinstalar.
+rodar `atlasoq list`; depois desinstalar.
 
 **Acceptance Scenarios**:
 
@@ -249,7 +306,7 @@ rodar `atlasoq me`; depois desinstalar.
    são resolvidas pelo gerenciador de pacotes e o app aparece no menu com nome e ícone corretos.
 2. **Given** o app instalado, **When** é aberto numa sessão Wayland e numa sessão X11, **Then**
    funciona nas duas.
-3. **Given** um terminal de agente, **When** o agente executa `atlasoq me`, **Then** o comando é
+3. **Given** um terminal de agente, **When** o agente executa `atlasoq list`, **Then** o comando é
    encontrado sem o usuário ajustar o `PATH`.
 4. **Given** o app instalado, **When** o usuário remove o pacote, **Then** os binários saem do
    sistema e os workspaces do usuário permanecem intactos.
@@ -269,9 +326,12 @@ rodar `atlasoq me`; depois desinstalar.
   mensagens separadas, nunca coladas.
 - O destino está com uma TUI em tela cheia ou esperando confirmação → a mensagem é entregue como
   texto colado; o comportamento depende da CLI de destino (documentado no tutorial).
-- `atlasoq ask` sem resposta → retorna após o tempo-limite com o que houver e indica que o tempo
+- `atlasoq ask` sem `reply` → retorna após o tempo-limite com a leitura da tela e indica que o tempo
   acabou; não fica preso para sempre.
-- O destino nunca fica ocioso (saída contínua) → `ask` respeita o tempo-limite.
+- O destino responde depois que o `ask` já expirou → o `reply` falha com "a pergunta de planner
+  expirou; use `atlasoq send planner` se ainda quiser avisá-lo" (exige conexão no sentido certo).
+- O mesmo agente faz duas perguntas seguidas ao mesmo destino → cada uma tem id próprio; o `reply`
+  responde à mais antiga pendente daquele agente.
 - Um agente gera saída muito volumosa → o canvas continua responsivo e os outros agentes não são
   afetados.
 - O app fecha durante um `atlasoq ask` → a CLI encerra com erro claro em vez de travar.
@@ -355,11 +415,11 @@ rodar `atlasoq me`; depois desinstalar.
   | Comando | O que faz |
   |---|---|
   | `atlasoq learn` | Mostra o tutorial para agentes |
-  | `atlasoq me` | Mostra o próprio nome, papel e status |
-  | `atlasoq list` | Lista agentes e notas ligados a mim, com direção e status |
+  | `atlasoq list` | Mostra quem sou (nome, papel) e os agentes e notas ligados a mim, com direção e status |
   | `atlasoq send <agente> <texto>` | Envia uma mensagem e retorna logo |
   | `atlasoq read <agente>` | Mostra o texto recente da tela do agente |
-  | `atlasoq ask <agente> <texto>` | Envia, espera o agente ficar ocioso e mostra a resposta |
+  | `atlasoq ask <agente> <texto>` | Envia uma pergunta e espera a resposta do agente |
+  | `atlasoq reply [agente] <texto>` | Responde a uma pergunta recebida por `ask` |
   | `atlasoq note <nota> [texto]` | Sem texto: lê a nota. Com texto: acrescenta ao fim |
   | `atlasoq help [comando]` | Mostra a ajuda geral ou de um comando |
 
@@ -371,9 +431,23 @@ rodar `atlasoq me`; depois desinstalar.
 - **FR-023**: Toda falha MUST terminar com código de saída diferente de zero e uma mensagem que
   diga o motivo e o próximo passo; erros de digitação de comando MUST sugerir o comando mais
   próximo.
-- **FR-024**: `atlasoq ask` MUST ter tempo-limite padrão (proposta: 10 minutos), MUST indicar
-  quando a resposta veio por tempo-limite e não por ociosidade, e MUST devolver só o que o destino
-  produziu depois da mensagem.
+- **FR-024**: `atlasoq ask` MUST esperar a resposta explícita do destino, dada com `atlasoq reply`,
+  e devolver exatamente o texto respondido. Se não houver resposta até o tempo-limite (padrão: 10
+  minutos), MUST devolver o texto que o destino mostrou na tela depois da pergunta, avisar que não
+  houve `reply` e terminar com o código de tempo esgotado.
+- **FR-024a**: A pergunta entregue ao destino MUST dizer que é uma pergunta, de quem veio e como
+  responder (ex.: `[atlasoq ask de:planner] ... — responda com: atlasoq reply "..."`).
+- **FR-024b**: `atlasoq reply <texto>` MUST responder à pergunta pendente endereçada ao agente que o
+  executa. Se houver mais de uma pergunta pendente, o agente MUST indicar a quem responde
+  (`atlasoq reply planner "..."`), e o erro MUST listar as perguntas pendentes. Sem pergunta
+  pendente, o comando MUST falhar e sugerir `atlasoq send`.
+- **FR-024c**: A resposta MUST ser entregue somente ao comando `ask` que está esperando, e não
+  digitada no terminal de quem perguntou. Responder a um `ask` MUST ser permitido mesmo que a
+  conexão só exista no sentido de quem perguntou para quem responde, e só enquanto a pergunta
+  estiver pendente. A resposta passa pela mesma sanitização, conta como troca para a proteção contra
+  loops e é registrada no log.
+- **FR-024d**: Se a conexão for pausada ou apagada, ou o destino encerrar, enquanto um `ask` espera,
+  o `ask` MUST terminar imediatamente com o motivo.
 - **FR-025**: Os códigos de saída MUST ser documentados e estáveis (ex.: 0 sucesso, 2 uso
   incorreto, 3 sem conexão/permissão, 4 destino indisponível, 5 tempo esgotado, 6 fora do AtlasOQ).
 
@@ -419,14 +493,41 @@ rodar `atlasoq me`; depois desinstalar.
   reescrever conteúdo existente de notas.
 - **FR-034**: Conteúdo HTML e scripts em notas MUST ser neutralizados na exibição.
 
+**Memória de longo prazo**
+
+- **FR-044**: Cada agente MUST ter uma memória própria, persistida no workspace e preservada entre
+  reinícios, reaberturas e dias diferentes.
+- **FR-045**: O agente MUST registrar anotações na própria memória com `atlasoq note memory
+  "<texto>"` (`memory` é um nome reservado que sempre se refere à memória de quem executa); a CLI
+  continua com 8 comandos. O app MUST acrescentar data e hora a cada anotação.
+- **FR-046**: Anotações MUST ser curtas (limite de 300 caracteres cada) e o tutorial MUST orientar o
+  agente a registrar só o essencial, com prefixos fixos: `feito:`, `decisão:`, `pendente:`, ao
+  concluir uma tarefa, tomar uma decisão ou deixar algo para depois.
+- **FR-047**: O hook de inicialização MUST entregar ao agente, junto com o tutorial, as anotações mais
+  recentes da memória dentro de um limite de tamanho (padrão: 20 anotações e no máximo ~2 KB), e
+  avisar quando houver anotações mais antigas não entregues.
+- **FR-048**: Somente o próprio agente MUST ler e escrever sua memória pela CLI; outros agentes MUST
+  NOT acessá-la. O usuário MUST conseguir ver, editar e apagar anotações pelo nó do agente.
+- **FR-049**: A memória MUST acompanhar o agente quando ele for renomeado. Ao apagar o agente, o app
+  MUST perguntar se mantém a memória (padrão: manter).
+- **FR-050**: O app MUST recusar anotações que pareçam conter segredos (chaves de API, tokens,
+  senhas), explicando o motivo.
+- **FR-052**: Por padrão, a memória MUST NOT ser versionada: o `.atlasoq/.gitignore` criado pelo app
+  MUST incluir `memory/`. As configurações do workspace MUST ter um botão "Versionar memória" que
+  remove essa linha (e "Parar de versionar", que a recoloca). O app MUST alterar só a própria linha,
+  preservando o resto do arquivo, e ao parar de versionar MUST avisar que o que já foi commitado
+  continua no histórico do git.
+- **FR-051**: O tutorial MUST instruir o agente a usar a memória para lembrar, sem abrir a sessão
+  perguntando ao usuário se deve continuar a tarefa anterior.
+
 **Persistência**
 
 - **FR-035**: O sistema MUST salvar automaticamente o workspace (posições, zoom, nós, notas,
   conexões, configurações dos agentes, perfis) em arquivos de texto locais, sem rede, dentro de
   `<raiz>/.atlasoq/`.
 - **FR-035a**: O diretório `.atlasoq/` MUST separar arquivos versionáveis (workspace, notas, perfis,
-  `learn.md`) de estado local (logs, backups, arquivos gerados por agente), e o app MUST criar um
-  `.atlasoq/.gitignore` que exclui o estado local.
+  `learn.md`) de estado local (logs, backups, arquivos gerados por agente e, por padrão, memórias),
+  e o app MUST criar um `.atlasoq/.gitignore` que exclui o estado local.
 - **FR-035b**: Perfis MUST existir em dois níveis: globais do usuário e do workspace
   (`.atlasoq/profiles/`); o do workspace prevalece em caso de mesmo nome.
 - **FR-035c**: Antes de executar comandos, perfis, hooks ou instruções de um `.atlasoq/` que o
@@ -434,8 +535,9 @@ rodar `atlasoq me`; depois desinstalar.
   pedir de novo quando mudarem.
 - **FR-036**: Gravações MUST ser atômicas, e o sistema MUST manter cópias das últimas versões
   válidas para restauração.
-- **FR-037**: Ao reabrir um workspace, os agentes MUST ser reiniciados com o mesmo comando,
-  diretório e tamanho, ou ficar parados se a opção "perguntar antes de iniciar" estiver ligada.
+- **FR-037**: Ao reabrir um workspace aprovado, todos os agentes MUST iniciar automaticamente, sem
+  pergunta, com o mesmo comando, diretório e tamanho. Se o workspace precisar de aprovação
+  (FR-035c), os agentes iniciam logo após a aprovação.
 - **FR-038**: Valores de variáveis marcadas como secretas MUST NOT ser gravados no workspace.
 - **FR-039**: Usuários MUST conseguir criar, abrir e alternar entre vários workspaces, com lista de
   recentes. Um mesmo workspace MUST NOT ser aberto por duas instâncias ao mesmo tempo.
@@ -446,8 +548,8 @@ rodar `atlasoq me`; depois desinstalar.
 - **FR-041**: O app MUST ser distribuído como pacote `.deb`, com entrada no menu do sistema, ícone
   próprio e a CLI `atlasoq` disponível dentro dos terminais do app sem configuração manual.
 - **FR-042**: O app MUST NOT enviar dados para fora da máquina e MUST NOT ter telemetria.
-- **FR-043**: Ao fechar o app, os processos dos agentes MUST ser encerrados sem deixar processos
-  órfãos.
+- **FR-043**: Ao fechar o app, ou se ele travar ou for encerrado à força, os processos dos agentes
+  MUST ser encerrados sem deixar processos órfãos.
 
 ### Key Entities
 
@@ -463,10 +565,14 @@ rodar `atlasoq me`; depois desinstalar.
 - **Nota (nó)**: nome único, arquivo Markdown, posição e tamanho.
 - **Conexão**: origem, destino, direção, estado (ativa, pausada, pausada automaticamente), limites
   (trocas consecutivas, taxa).
-- **Mensagem**: id, horário, origem, destino, conexão, tipo (`send`, `ask`, `note`), texto,
+- **Pergunta pendente**: id, quem perguntou, destino, horário, tempo-limite; termina com resposta,
+  tempo esgotado ou cancelamento.
+- **Mensagem**: id, horário, origem, destino, conexão, tipo (`send`, `ask`, `reply`, `note`), texto,
   contagem de trocas, resultado.
 - **Registro de auditoria**: sequência de mensagens e eventos de conexão (criada, pausada,
   reativada, apagada), por workspace.
+- **Memória do agente**: um arquivo por agente, com anotações (data e hora, tipo `feito`, `decisão`
+  ou `pendente`, texto curto), em ordem cronológica.
 
 ## Success Criteria *(mandatory)*
 
@@ -495,6 +601,11 @@ rodar `atlasoq me`; depois desinstalar.
 - **SC-009**: Em 50 encerramentos forçados durante a edição, o workspace reabre íntegro em 100% das
   vezes, com perda máxima de 1 segundo de alterações.
 - **SC-010**: Ao fechar o app, 0 processos de agentes permanecem rodando.
+- **SC-012**: A memória entregue ao agente quando ele nasce custa no máximo ~600 tokens (cerca de 2
+  KB), independentemente de quantos dias de anotações existam.
+- **SC-013**: Depois de um reinício, um agente de mercado responde corretamente "o que você fez por
+  último e o que ficou pendente?" em pelo menos 9 de 10 tentativas, só com a memória entregue no
+  nascimento.
 - **SC-011**: O `.deb` instala, abre e desinstala sem erros nas versões LTS atual e anterior do
   Ubuntu e no Debian estável, em Wayland e X11.
 
@@ -502,21 +613,28 @@ rodar `atlasoq me`; depois desinstalar.
 
 - Usuários são desenvolvedores em Linux que já usam CLIs de agentes e têm essas CLIs instaladas e
   autenticadas por conta própria. O AtlasOQ não instala nem autentica agentes.
-- O status `trabalhando/ocioso` e o fim da espera de `atlasoq ask` usam uma heurística de atividade
-  de saída do terminal (silêncio por alguns segundos). É suficiente para o MVP; detecção por hooks
+- O status `trabalhando/ocioso` (e o momento em que o modo `type` do hook considera o agente
+  pronto) usa uma heurística de atividade de saída do terminal (silêncio por alguns segundos). É suficiente para o MVP; detecção por hooks
   das CLIs fica para depois.
 - Os agentes rodam com as permissões do usuário, sem sandbox. Conectar agentes amplia o alcance de
   uma eventual injeção de prompt; isso é documentado e mitigado por conexões explícitas, limites e
   auditoria, não eliminado.
 - Ameaças de processos maliciosos rodando com o mesmo usuário estão fora do modelo de ameaça.
-- O processo dos agentes não sobrevive ao fechamento do app no MVP; a sobrevivência (daemon de
-  sessões) é o primeiro item pós-MVP.
-- Desenhos à mão livre, rpm, Flatpak, AppImage, macOS e Windows estão fora deste escopo.
+- Decidido: o processo dos agentes não sobrevive ao fechamento nem a um crash do app no MVP; a
+  conversa em andamento dentro da CLI do agente se perde, salvo o que a própria CLI conseguir
+  retomar. A sobrevivência (daemon de sessões) é o primeiro item pós-MVP, e a camada de terminais
+  MUST ser desenhada para recebê-lo sem reescrita.
+- Decidido: o canvas do MVP tem apenas três tipos de elemento: agentes, notas e conexões. Desenhos
+  de qualquer tipo (mão livre, formas, setas soltas, textos soltos, molduras) ficam fora do MVP.
+- rpm, Flatpak, AppImage, macOS e Windows estão fora deste escopo.
 - Comandos da CLI são em inglês (padrão de CLIs); o tutorial e a interface do app são em português
   no MVP, com a estrutura preparada para tradução.
 - O projeto é licenciado sob Apache-2.0.
 - O modo `hook` depende de cada CLI oferecer um mecanismo de início de sessão configurável por
   arquivo ou flag sem tocar na configuração do projeto; quais CLIs suportam isso será confirmado no
   plano. As demais usam `prompt` ou `type`.
-- Hooks no MVP só executam o aprendizado (`atlasoq learn`); hooks com scripts arbitrários do usuário
-  ficam para depois.
+- Hooks no MVP só executam o aprendizado (`atlasoq learn`, incluindo a entrega da memória); hooks com
+  scripts arbitrários do usuário ficam para depois.
+- O AtlasOQ não chama modelos de IA (constituição, princípio III), então quem resume é o próprio
+  agente, ao escrever anotações curtas. Compactação automática de memórias longas (o agente
+  reescrevendo um resumo) fica para depois do MVP; no MVP, o limite de entrega garante custo baixo.

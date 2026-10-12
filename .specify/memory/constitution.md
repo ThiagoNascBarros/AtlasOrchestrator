@@ -1,7 +1,14 @@
 <!--
 Sync Impact Report
 ==================
-Versão: 1.1.0 → 1.2.0 (MINOR: aprendizado automático por hook, diretório .atlasoq, licença)
+Versão: 1.2.0 → 1.3.0 (MINOR: memória de longo prazo por agente entra no MVP)
+
+Alterações da 1.3.0:
+- VII. Escopo de MVP: inclui memória de longo prazo por agente.
+- IX. Agentes Aprendem pela Própria CLI: o hook de inicialização também entrega a memória recente,
+  com limite de tamanho.
+
+Alterações da 1.2.0 (aprendizado automático por hook, diretório .atlasoq, licença):
 
 Princípios alterados:
 - V. Persistência Local e Legível: o workspace passa a viver em `<raiz>/.atlasoq/`, com separação
@@ -98,8 +105,8 @@ Discuti-las antes do código evita retrabalho.
 
 ### VII. Escopo de MVP
 O MVP MUST conter apenas: canvas infinito com pan e zoom, agentes em nós de terminal, notas em
-Markdown, conexões entre agentes, a CLI `atlasoq` com seu tutorial para agentes, e persistência
-local. Funcionalidades adicionais (desenhos, colaboração em tempo real, plugins, sincronização na
+Markdown, conexões entre agentes, a CLI `atlasoq` com seu tutorial para agentes, memória de longo
+prazo por agente (anotações curtas escritas pelo próprio agente) e persistência local. Funcionalidades adicionais (desenhos, colaboração em tempo real, plugins, sincronização na
 nuvem, sandbox de agentes, daemon de sessões) MUST ficar fora do MVP, a menos que sejam aprovadas
 por uma emenda MINOR.
 Rationale: um escopo pequeno e bem testado vale mais que um escopo amplo e instável.
@@ -120,7 +127,8 @@ previsível reduz erros, tokens gastos e a necessidade de intervenção humana.
 ### IX. Agentes Aprendem pela Própria CLI
 Todo agente MUST aprender a usar a CLI `atlasoq` automaticamente ao nascer, sem ação manual do
 usuário: logo após a inicialização, um hook de inicialização definido no perfil do agente MUST
-fazer o agente receber o conteúdo de `atlasoq learn`. O mesmo vale quando o agente é reiniciado ou
+fazer o agente receber o conteúdo de `atlasoq learn` e as anotações mais recentes da própria
+memória, dentro de um limite de tamanho que mantenha o custo de tokens baixo. O mesmo vale quando o agente é reiniciado ou
 o workspace é reaberto. O tutorial MUST ser curto (cabe numa tela e meia de terminal), escrito para
 ser lido por um agente de IA, com exemplos copiáveis de cada comando, e MUST ser publicado em
 `docs/`. O tutorial MUST ser atualizado no mesmo PR que alterar a CLI, e MUST existir um teste
@@ -191,4 +199,4 @@ PR que viole um princípio MUST ser bloqueado até que a violação seja corrigi
 seja aprovada. Complexidade adicional (nova dependência, nova camada, nova abstração) MUST ser
 justificada no próprio PR.
 
-**Version**: 1.2.0 | **Ratified**: 2026-10-11 | **Last Amended**: 2026-10-11
+**Version**: 1.3.0 | **Ratified**: 2026-10-11 | **Last Amended**: 2026-10-11

@@ -21,6 +21,7 @@ código de nenhum aplicativo existente.
 - Notas em Markdown, que podem ser ligadas a agentes como contexto compartilhado
 - Conexões entre agentes, sempre criadas pelo usuário, com direção, limites e auditoria
 - CLI `atlasoq` com 8 comandos e tutorial que cada agente recebe automaticamente ao iniciar
+- Memória de longo prazo por agente: anotações curtas entregues quando o agente inicia
 - Persistência local do workspace em `<projeto>/.atlasoq/`
 - Instalação por pacote `.deb`
 
@@ -28,11 +29,11 @@ código de nenhum aplicativo existente.
 
 ```
 atlasoq learn                    # tutorial para o agente
-atlasoq me                       # quem sou eu
-atlasoq list                     # com quem estou ligado
+atlasoq list                     # quem sou eu e com quem estou ligado
 atlasoq send coder "rode os testes"
 atlasoq read coder               # o que está na tela do coder
-atlasoq ask coder "quantos testes falharam?"
+atlasoq ask coder "quantos testes falharam?"   # espera a resposta
+atlasoq reply "2 falharam: auth e cache"       # (no coder) responde à pergunta
 atlasoq note plano               # lê a nota "plano"
 atlasoq note plano "feito: testes"
 atlasoq help
@@ -51,6 +52,7 @@ Tauri v2 (UI em TypeScript), xterm.js para os terminais e núcleo em Rust com `p
 ├── notes/            # notas em Markdown
 ├── profiles/         # perfis de agente do workspace
 ├── learn.md          # regras do time, anexadas ao tutorial
+├── memory/           # memória de longo prazo de cada agente, fora do git por padrão
 ├── agents/           # gerado pelo app (hooks), ignorado pelo git
 ├── logs/             # auditoria, ignorado pelo git
 └── backups/          # ignorado pelo git
@@ -58,7 +60,7 @@ Tauri v2 (UI em TypeScript), xterm.js para os terminais e núcleo em Rust com `p
 
 ### Princípios
 
-Resumo da [constituição](.specify/memory/constitution.md) v1.2.0:
+Resumo da [constituição](.specify/memory/constitution.md) v1.3.0:
 
 1. Originalidade e licenciamento
 2. Linux primeiro (X11 e Wayland)

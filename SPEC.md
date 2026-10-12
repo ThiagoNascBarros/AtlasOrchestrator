@@ -5,7 +5,7 @@
 | Status | **Aprovado com alterações** (nome, stack, `.deb`); detalhes do MVP em [specs/001](specs/001-mvp-orquestracao-agentes/spec.md) |
 | Versão | 0.3.0 |
 | Data | 2026-10-11 |
-| Constituição | v1.2.0 |
+| Constituição | v1.3.0 |
 | Fontes de pesquisa | `relatorio-orquestracao-agentes-ia-desktop-claude.md`, `relatorio-orquestracao-agentes-ia-desktop-gemini.md` |
 
 AtlasOQ é um canvas infinito para **orquestrar agentes de IA** no Linux. Cada agente roda num
@@ -136,8 +136,8 @@ bidirecional; ao pausar a conexão, a 11ª é recusada com erro claro e registra
 - Ao reabrir, o canvas, as notas e as conexões voltam como estavam. Cada terminal é **recriado**
   com o mesmo comando, cwd e tamanho (o processo anterior não sobrevive ao fechamento do app no
   MVP; ver seção 6.1 e milestone pós-MVP "daemon").
-- Opção "não reabrir terminais automaticamente" por workspace, para evitar relançar agentes sem
-  querer.
+- Ao reabrir um workspace aprovado, todos os agentes iniciam sozinhos, sem pergunta (clarify
+  2026-10-11).
 - Múltiplos workspaces, com lista de recentes.
 - Nenhum segredo é serializado: variáveis de ambiente marcadas como secretas ficam fora do JSON.
 
@@ -158,6 +158,20 @@ perder os últimos ~500 ms de alterações de layout.
 
 **Aceite:** um agente de mercado recém-criado, sem nenhuma instrução do usuário, consegue
 perguntar algo a outro agente e anotar numa nota ligada.
+
+### 3.6a Memória de longo prazo por agente
+
+- Cada agente tem um arquivo `.atlasoq/memory/<nome>.md` com anotações curtas e datadas.
+- O agente escreve com `atlasoq note memory "feito: ..."` (`memory` é nome reservado para a própria
+  memória; a CLI continua com 8 comandos). Prefixos: `feito:`, `decisão:`, `pendente:`; até 300
+  caracteres por anotação.
+- Ao nascer, o hook entrega o tutorial **e** as últimas 20 anotações (no máximo ~2 KB, cerca de 600
+  tokens). O resto fica no arquivo e pode ser lido com `atlasoq note memory`.
+- Só o próprio agente lê e escreve a sua memória pela CLI; o usuário vê e edita pelo nó.
+- O app não resume nada (não chama IA); a economia de tokens vem das anotações curtas e do limite
+  de entrega. Compactação automática fica para depois do MVP.
+- Por padrão a memória não é versionada (`memory/` no `.atlasoq/.gitignore`); um botão nas
+  configurações do workspace passa a versioná-la, e outro volta atrás (clarify 2026-10-11).
 
 ### 3.7 Instalação
 
@@ -428,19 +442,21 @@ dizem o próximo passo, saída em texto com `--json` opcional.
 | Comando | Efeito | Requer |
 |---|---|---|
 | `atlasoq learn` | Imprime o tutorial para agentes, personalizado | — |
-| `atlasoq me` | Meu nome, papel e status | — |
-| `atlasoq list` | Agentes e notas ligados a mim, com direção e status | — |
+| `atlasoq list` | Quem sou (nome, papel) e os agentes e notas ligados a mim, com direção e status | — |
 | `atlasoq send <agente> <texto>` | Entrega a mensagem e retorna logo | conexão ativa eu→agente |
 | `atlasoq read <agente>` | Texto recente da tela do agente, sem ANSI | conexão ativa eu→agente |
-| `atlasoq ask <agente> <texto>` | `send` + espera o agente ficar ocioso + devolve o que ele produziu depois da mensagem | conexão ativa eu→agente |
+| `atlasoq ask <agente> <texto>` | Envia uma pergunta e espera a resposta dada com `reply`; no tempo-limite devolve a leitura da tela, com aviso | conexão ativa eu→agente |
+| `atlasoq reply [agente] <texto>` | Responde a uma pergunta pendente; a resposta vai só para o `ask` que espera | pergunta pendente endereçada a mim |
 | `atlasoq note <nota> [texto]` | Sem texto: lê a nota. Com texto: acrescenta ao fim, com autor e hora | leitura: qualquer ligação; acréscimo: agente→nota |
 | `atlasoq help [comando]` | Ajuda geral ou de um comando, com exemplo | — |
 
 Detalhes:
 - O texto pode vir como argumento ou pela entrada padrão: `cat plano.md | atlasoq send coder`.
 - Flags opcionais: `--json` (todos), `--lines N` (`read`), `--timeout S` (`ask`, padrão de 10 min).
-- `ask` usa a mesma heurística de ociosidade do status do nó (silêncio na saída por alguns segundos
-  depois de ter havido atividade). A saída indica se terminou por ociosidade ou por tempo-limite.
+- A pergunta chega ao destino como `[atlasoq ask de:<origem> id:<n>] <texto> — responda com:
+  atlasoq reply "..."`. Com mais de uma pergunta pendente, `reply` exige o nome de quem perguntou.
+- `reply` vale mesmo numa conexão só de ida (quem perguntou → quem responde), apenas enquanto a
+  pergunta está pendente; conta como troca na proteção contra loops.
 - Comando digitado errado sugere o mais próximo (`atlasoq sned` → "você quis dizer `send`?").
 - Códigos de saída estáveis: 0 sucesso, 2 uso incorreto, 3 sem conexão ou permissão, 4 destino
   indisponível, 5 tempo esgotado, 6 executado fora do AtlasOQ.
@@ -507,7 +523,7 @@ diária e retenção configurável. O painel da conexão lê esse log.
   learn` imprime esse texto e, dentro do app, acrescenta um cabeçalho com "você é `<nome>`, papel
   `<papel>`, ligado a: ...".
 - **Formato:** no máximo ~60 linhas, frases curtas, um bloco de exemplo por comando, seção "regras"
-  (responda no seu próprio terminal; use `ask` quando precisar da resposta e `send` quando não;
+  (pergunta recebida se responde com `reply`; use `ask` quando precisar da resposta e `send` quando não;
   mensagens curtas; contexto longo vai numa nota; não fique em vai-e-vem; se um comando falhar, leia
   o erro, ele diz o que fazer) e seção "erros comuns".
 - **Personalização:** `.atlasoq/learn.md` (opcional, versionável) é anexado ao tutorial com as
@@ -544,10 +560,11 @@ diária e retenção configurável. O painel da conexão lê esse log.
     ├── notes/plano.md           # uma nota por arquivo                        (versionável)
     ├── profiles/revisor.json    # perfis do workspace, sobrepõem os globais   (versionável)
     ├── learn.md                 # regras do time anexadas ao tutorial         (versionável, opcional)
+    ├── memory/<nome>.md         # memória de longo prazo de cada agente       (local por padrão; botão "Versionar memória")
     ├── agents/<nome>/           # gerado a cada início (config de hook etc.)  (local)
     ├── logs/                    # auditoria de mensagens e hooks              (local)
     ├── backups/                 # últimas N versões do workspace.json         (local)
-    └── .gitignore               # criado pelo app: agents/ logs/ backups/
+    └── .gitignore               # criado pelo app: agents/ logs/ backups/ memory/
 
 ~/.config/atlasoq/               # nível do usuário
 ├── profiles/*.json              # perfis globais (os prontos vêm com o app)
@@ -572,7 +589,7 @@ Exemplo de `workspace.json`:
   "id": "ws_01J...",
   "name": "refactor-auth",
   "viewport": { "x": -320.5, "y": 140.0, "zoom": 0.85 },
-  "settings": { "reopen_terminals": "ask" },
+  "settings": {},
   "nodes": [
     {
       "id": "t_a1", "kind": "agent", "name": "planner", "role": "planeja e distribui tarefas",
@@ -679,7 +696,7 @@ testes passando (constituição).
 - UI de conexões (criar, direção, pausar, apagar, histórico).
 - `atlasoq-link`: socket, autenticação, ACL, sanitização, fila de entrega, proteção contra loops,
   log de auditoria.
-- `atlasoq-cli` com os 8 comandos (`learn`, `me`, `list`, `send`, `read`, `ask`, `note`, `help`), testes de contrato e mensagens de erro.
+- `atlasoq-cli` com os 8 comandos (`learn`, `list`, `send`, `read`, `ask`, `reply`, `note`, `help`), testes de contrato e mensagens de erro.
 - Status `trabalhando/ocioso/encerrado` nos nós e hook de inicialização com os modos
   `hook`, `prompt`, `type` e `off`.
 - Aprovação de workspace (`trust.json`).
@@ -726,13 +743,17 @@ Aprovadas em 2026-10-11:
 6. **Aprendizado automático:** sem botão; todo agente recebe o tutorial por hook de inicialização.
 7. **Diretório `.atlasoq/`** na raiz do workspace, com parte versionável e parte local.
 8. **Licença:** Apache-2.0.
+9. **Daemon fora do MVP:** agentes encerram com o app e reiniciam ao reabrir; o daemon é o
+   primeiro item pós-MVP (clarify 2026-10-11).
+10. **Agentes iniciam sozinhos** ao reabrir um workspace aprovado (clarify 2026-10-11).
+11. **Memória de longo prazo por agente** no MVP, escrita pelo próprio agente com `atlasoq note
+    memory` e entregue no nascimento com limite de tamanho (diretriz do usuário, 2026-10-11).
+12. **`ask` com resposta explícita:** `atlasoq reply`; `me` sai da CLI (clarify 2026-10-11).
+13. **Sem desenhos no MVP** (clarify 2026-10-11).
 
 Ainda pendentes (a tratar no `/speckit-clarify`):
 
-1. **Daemon fora do MVP:** agentes são reiniciados ao reabrir o app; o daemon é o primeiro item
-   pós-MVP.
-2. **Desenhos fora do MVP**, coerente com o princípio VII.
-3. **Idioma:** comandos em inglês; interface e tutorial em português no MVP.
+1. **Idioma:** comandos em inglês; interface e tutorial em português no MVP.
 
 ## 10. Rastreabilidade com a constituição
 
