@@ -3,9 +3,9 @@
 | Campo | Valor |
 |---|---|
 | Status | **Aprovado com alterações** (nome, stack, `.deb`); detalhes do MVP em [specs/001](specs/001-mvp-orquestracao-agentes/spec.md) |
-| Versão | 0.2.0 |
+| Versão | 0.3.0 |
 | Data | 2026-10-11 |
-| Constituição | v1.1.0 |
+| Constituição | v1.2.0 |
 | Fontes de pesquisa | `relatorio-orquestracao-agentes-ia-desktop-claude.md`, `relatorio-orquestracao-agentes-ia-desktop-gemini.md` |
 
 AtlasOQ é um canvas infinito para **orquestrar agentes de IA** no Linux. Cada agente roda num
@@ -81,13 +81,14 @@ referência com GPU integrada.
 - Perfis prontos e editáveis: Claude Code, Codex, Gemini CLI, OpenCode, Aider e Shell. Um perfil é
   só um comando com argumentos; não há integração específica com nenhuma CLI no MVP.
 - Status visível no nó: `trabalhando`, `ocioso` (heurística de silêncio na saída) ou `encerrado`.
-- Ação "Ensinar atlasoq" no nó (seção 6.4.7).
+- Hook de inicialização: logo após subir, o agente recebe o tutorial do `atlasoq learn`
+  automaticamente (seção 6.4.7). O nó mostra o estado do aprendizado.
 - Terminal completo: cores de 24 bits, TUIs em tela alternativa, mouse, bracketed paste, OSC 8
   (hyperlinks), Unicode e Nerd Fonts, redimensionamento com SIGWINCH.
 - Scrollback configurável (padrão de 10 mil linhas), busca no scrollback, copiar e colar.
 - Clicar em `caminho:linha` ou em URL abre no `$EDITOR` ou via `xdg-open`.
-- Barra de título do nó com: nome, papel, status, cwd e menu (reiniciar, duplicar, encerrar,
-  ensinar atlasoq).
+- Barra de título do nó com: nome, papel, status, estado do aprendizado, cwd e menu (reiniciar,
+  duplicar, encerrar).
 - Foco determinístico: só um nó recebe teclado por vez, com indicação visual clara. `Esc Esc`
   devolve o foco ao canvas. A política de foco é uma máquina de estados explícita e testada.
 
@@ -127,7 +128,10 @@ bidirecional; ao pausar a conexão, a 11ª é recusada com erro claro e registra
 
 ### 3.5 Persistência local
 
-- Um workspace é um diretório com `workspace.json`, `notes/*.md` e `logs/`.
+- Um workspace mora em `<raiz>/.atlasoq/`, onde `<raiz>` é a pasta escolhida pelo usuário
+  (normalmente a raiz do projeto). Estrutura na seção 6.5.
+- Ao abrir um `.atlasoq/` que o usuário não criou ou não aprovou nesta máquina (ex.: repositório
+  clonado), o app mostra comandos, perfis, hooks e `learn.md` e só inicia agentes após aprovação.
 - Salvamento automático com debounce (cerca de 500 ms após a última alteração) e escrita atômica.
 - Ao reabrir, o canvas, as notas e as conexões voltam como estavam. Cada terminal é **recriado**
   com o mesmo comando, cwd e tamanho (o processo anterior não sobrevive ao fechamento do app no
@@ -149,7 +153,10 @@ perder os últimos ~500 ms de alterações de layout.
   em `docs/guia-orquestracao.md`.
 - Teste automatizado que executa todos os exemplos do tutorial.
 
-**Aceite:** um agente de mercado que recebeu "Ensinar atlasoq" consegue, sem outra explicação,
+- Todo agente aprende sozinho ao nascer, por hook de inicialização (seção 6.4.7). Não há botão nem
+  passo manual.
+
+**Aceite:** um agente de mercado recém-criado, sem nenhuma instrução do usuário, consegue
 perguntar algo a outro agente e anotar numa nota ligada.
 
 ### 3.7 Instalação
@@ -276,9 +283,7 @@ As versões serão fixadas em `Cargo.lock` e `package-lock.json`/`pnpm-lock.yaml
 cada dependência será registrada em `docs/licenses.md` (princípio I, verificação automatizada com
 `cargo-deny` e `license-checker`).
 
-**Licença do projeto (decisão pendente):** recomendo **Apache-2.0** (concessão explícita de
-patentes, compatível com todas as dependências acima). Alternativa: MIT OR Apache-2.0, convenção
-do ecossistema Rust.
+**Licença do projeto:** **Apache-2.0** (aprovada em 2026-10-11; arquivo `LICENSE` na raiz).
 
 ---
 
@@ -505,26 +510,58 @@ diária e retenção configurável. O painel da conexão lê esse log.
   (responda no seu próprio terminal; use `ask` quando precisar da resposta e `send` quando não;
   mensagens curtas; contexto longo vai numa nota; não fique em vai-e-vem; se um comando falhar, leia
   o erro, ele diz o que fazer) e seção "erros comuns".
-- **Entrega ao agente:** ação "Ensinar atlasoq" no nó envia, pelo mesmo caminho das mensagens, uma
-  apresentação de 3 a 5 linhas terminando em "rode `atlasoq learn`". Perfis podem ligar "ensinar ao
-  iniciar" (desligado por padrão). O app não grava `AGENTS.md`, `CLAUDE.md` ou similares no
-  repositório do usuário; o guia sugere ao usuário como fazer isso, se quiser.
+- **Personalização:** `.atlasoq/learn.md` (opcional, versionável) é anexado ao tutorial com as
+  regras do time (ex.: "o revisor nunca edita código"), limitado a ~4 KiB.
+- **Entrega automática por hook de inicialização** (sem botão, sem passo manual). O perfil de cada
+  agente define o modo:
+
+  | Modo | Como funciona | Uso |
+  |---|---|---|
+  | `hook` | O app gera em `.atlasoq/agents/<nome>/` a configuração do hook de início de sessão da própria CLI, executando `atlasoq learn`, e passa esse arquivo à CLI por flag ou variável de ambiente. A saída entra no contexto do agente sem gastar um turno | CLIs com hooks de sessão configuráveis sem tocar no projeto (Claude Code via `--settings`; demais a confirmar no plano) |
+  | `prompt` | O app inicia a CLI com um prompt inicial: "Você é `<nome>` no AtlasOQ. Rode `atlasoq learn` agora e siga as instruções." | CLIs que aceitam prompt inicial como argumento |
+  | `type` | O app espera o agente ficar pronto (primeira ociosidade após o início) e envia a mesma instrução pelo caminho normal de entrega | Fallback universal |
+  | `off` | Nada | Perfil "Shell" |
+
+  O hook roda ao criar o agente, ao reiniciá-lo e ao reabrir o workspace. O nó mostra
+  `aprendendo…`, `pronto` ou `aprendizado falhou: <motivo>`; o resultado vai para o log.
+  Se o usuário estiver digitando no agente, o modo `type` espera ou desiste e avisa, sem misturar
+  texto. Tempo-limite padrão para o agente ficar pronto: 60 s.
+- **Sem efeitos fora de `.atlasoq/`:** o app não grava `AGENTS.md`, `CLAUDE.md`, `.claude/` nem a
+  configuração global das CLIs.
 - **Guia para usuários:** `docs/guia-orquestracao.md` com receitas: coordenador → executores,
   executor ↔ revisor, nota de plano compartilhada, e como escrever o papel de cada agente.
 - **Teste:** um teste de integração sobe dois agentes com shells, extrai cada bloco de exemplo do
   tutorial e o executa, verificando o efeito esperado. Mudou a CLI e não atualizou o tutorial, o
-  teste falha.
+  teste falha. Outro teste usa uma CLI falsa para cada modo de hook e verifica que o agente
+  recém-criado recebe o tutorial.
 
 ### 6.5 Armazenamento do workspace (`atlasoq-store`)
 
 ```
-~/.local/share/atlasoq/workspaces/<slug>/      # ou qualquer diretório escolhido pelo usuário
-├── workspace.json
-├── notes/
-│   └── n_7f3a.md
-├── logs/
-│   └── links-2026-10-11.jsonl
-└── .backups/                                   # últimas N versões do workspace.json
+<raiz>/                          # pasta escolhida pelo usuário, normalmente a raiz do projeto
+└── .atlasoq/
+    ├── workspace.json           # canvas, nós, conexões                       (versionável)
+    ├── notes/plano.md           # uma nota por arquivo                        (versionável)
+    ├── profiles/revisor.json    # perfis do workspace, sobrepõem os globais   (versionável)
+    ├── learn.md                 # regras do time anexadas ao tutorial         (versionável, opcional)
+    ├── agents/<nome>/           # gerado a cada início (config de hook etc.)  (local)
+    ├── logs/                    # auditoria de mensagens e hooks              (local)
+    ├── backups/                 # últimas N versões do workspace.json         (local)
+    └── .gitignore               # criado pelo app: agents/ logs/ backups/
+
+~/.config/atlasoq/               # nível do usuário
+├── profiles/*.json              # perfis globais (os prontos vêm com o app)
+└── settings.json
+~/.local/state/atlasoq/
+├── recent.json                  # workspaces recentes
+└── trust.json                   # aprovações de workspace (hash dos comandos/hooks aprovados)
+```
+
+Exemplo de perfil (`profiles/claude-code.json`):
+
+```json
+{ "name": "claude-code", "command": "claude", "args": [],
+  "learn": { "mode": "hook" }, "env": {} }
 ```
 
 Exemplo de `workspace.json`:
@@ -538,16 +575,17 @@ Exemplo de `workspace.json`:
   "settings": { "reopen_terminals": "ask" },
   "nodes": [
     {
-      "id": "t_a1", "kind": "terminal", "title": "planner",
+      "id": "t_a1", "kind": "agent", "name": "planner", "role": "planeja e distribui tarefas",
+      "profile": "claude-code",
       "rect": { "x": 0, "y": 0, "w": 720, "h": 460 },
       "terminal": {
-        "command": "claude", "args": [], "cwd": "~/code/app",
+        "command": "claude", "args": [], "cwd": ".",
         "env": { "FOO": "bar" }, "env_secret_keys": ["ANTHROPIC_API_KEY"],
         "cols": 100, "rows": 30
       }
     },
-    { "id": "n_7f3a", "kind": "note", "title": "Plano", "rect": { "x": 760, "y": 0, "w": 380, "h": 300 },
-      "note": { "file": "notes/n_7f3a.md" } }
+    { "id": "n_7f3a", "kind": "note", "name": "plano", "rect": { "x": 760, "y": 0, "w": 380, "h": 300 },
+      "note": { "file": "notes/plano.md" } }
   ],
   "connections": [
     { "id": "c_1", "from": "t_a1", "to": "t_b2", "direction": "both", "state": "active",
@@ -558,7 +596,11 @@ Exemplo de `workspace.json`:
 
 - **Escrita atômica:** grava em `workspace.json.tmp` no mesmo diretório, `fsync`, `rename`,
   `fsync` do diretório (princípio V). O mesmo vale para notas.
-- **Backups:** mantém as últimas 10 versões em `.backups/`. Se o `workspace.json` estiver
+- **Caminhos relativos:** `cwd` é relativo à `<raiz>`, para o workspace funcionar em outra máquina
+  ou outro clone.
+- **Confiança:** ao abrir, o app calcula um hash de comandos, perfis, hooks e `learn.md`; se não
+  bater com `trust.json`, mostra o que será executado e pede aprovação antes de iniciar agentes.
+- **Backups:** mantém as últimas 10 versões em `backups/`. Se o `workspace.json` estiver
   ilegível na abertura, o app oferece restaurar o backup mais recente válido.
 - **Migrações:** campo `schema`; migrações puras e testadas para cada versão.
 - **Segredos:** chaves listadas em `env_secret_keys` têm o valor lido do keyring do sistema (Secret
@@ -583,6 +625,8 @@ Exemplo de `workspace.json`:
 | R9 | **Agentes com acesso amplo** ao sistema (rodam com o UID do usuário, worktree não é sandbox) | Alta | Alto | Não-objetivo do MVP, declarado no README e no threat model. Sandbox por nó (bubblewrap/Landlock/podman) é item pós-MVP |
 | R10 | **Segredos em workspaces** versionados no git | Média | Alto | `env_secret_keys` + keyring; aviso ao detectar padrões de chave em `env`; nunca serializar tokens |
 | R16 | **Agentes não seguem o tutorial** ou usam a CLI de forma errada | Média | Médio | Tutorial curto e testado, erros que dizem o próximo passo, sugestão de comando, medição de sucesso com CLIs reais (spec 001, SC-002) |
+| R17 | **Workspace malicioso**: um `.atlasoq/` vindo de um repositório clonado define comandos de agentes, hooks ou `learn.md` com instruções hostis que rodariam ao abrir | Média | Alto | Aprovação explícita antes da primeira execução e a cada mudança (`trust.json` com hash); hooks no MVP só executam `atlasoq learn`, sem scripts arbitrários |
+| R18 | **Hook de aprendizado frágil**: CLIs mudam ou removem hooks, demoram a ficar prontas ou ignoram o prompt inicial | Média | Médio | Três modos com fallback (`hook` → `prompt` → `type`), estado visível no nó, teste com CLI falsa por modo e teste manual com CLIs reais a cada release |
 | R11 | **Mudanças nas CLIs de agentes** (diálogos de confirmação de paste, modos de daemon) quebram a entrega | Alta | Médio | Entrega genérica (paste + Enter) sem lógica por CLI no MVP; suíte de testes manuais por CLI; perfis permitem ajustar o atraso do Enter |
 | R12 | **Corrupção do workspace** por crash | Baixa | Alto | Escrita atômica, backups, teste de `kill -9` no CI |
 | R13 | **Processos órfãos** se o app morrer | Média | Médio | `setsid` + `PR_SET_PDEATHSIG` + encerramento do grupo; teste automatizado |
@@ -598,7 +642,9 @@ testes passando (constituição).
 
 ### M0 — Fundações e spikes (1–2 semanas)
 
-- Decidir a licença; ADR-001 (stack) e ADR-002 (modelo de conexão).
+- ADR-001 (stack), ADR-002 (modelo de conexão) e ADR-003 (diretório `.atlasoq/` e hooks).
+- Levantar quais CLIs (Claude Code, Codex, Gemini CLI, OpenCode, Aider) suportam hooks de sessão
+  ou prompt inicial, para definir o modo de cada perfil pronto.
 - Repositório com workspace Cargo, app Tauri mínimo, UI com Vite, lint, formatação, CI
   (GitHub Actions) com `cargo test`, Vitest e verificação de licenças.
 - **Spike 1 — terminal no WebKitGTK:** 1 xterm.js ligado a um PTY real via `portable-pty`.
@@ -634,7 +680,9 @@ testes passando (constituição).
 - `atlasoq-link`: socket, autenticação, ACL, sanitização, fila de entrega, proteção contra loops,
   log de auditoria.
 - `atlasoq-cli` com os 8 comandos (`learn`, `me`, `list`, `send`, `read`, `ask`, `note`, `help`), testes de contrato e mensagens de erro.
-- Status `trabalhando/ocioso/encerrado` nos nós e ação "Ensinar atlasoq".
+- Status `trabalhando/ocioso/encerrado` nos nós e hook de inicialização com os modos
+  `hook`, `prompt`, `type` e `off`.
+- Aprovação de workspace (`trust.json`).
 - Tutorial `docs/agentes/tutorial.md`, guia `docs/guia-orquestracao.md` e o teste que executa os exemplos do tutorial.
 - **Testes de integração obrigatórios** (constituição): criar conexão entre dois PTYs, trocar
   dados, pausar, recusar, loop guard disparando, payloads de escape neutralizados.
@@ -675,14 +723,16 @@ Aprovadas em 2026-10-11:
 4. **CLI:** 8 comandos curtos e fáceis de lembrar (seção 6.4.2); tutorial para agentes via
    `atlasoq learn` (seção 6.4.7).
 5. **Empacotamento:** apenas `.deb` por enquanto.
+6. **Aprendizado automático:** sem botão; todo agente recebe o tutorial por hook de inicialização.
+7. **Diretório `.atlasoq/`** na raiz do workspace, com parte versionável e parte local.
+8. **Licença:** Apache-2.0.
 
-Ainda pendentes:
+Ainda pendentes (a tratar no `/speckit-clarify`):
 
-1. **Licença:** Apache-2.0 (recomendado) ou MIT OR Apache-2.0.
-2. **Daemon fora do MVP:** agentes são reiniciados ao reabrir o app; o daemon é o primeiro item
+1. **Daemon fora do MVP:** agentes são reiniciados ao reabrir o app; o daemon é o primeiro item
    pós-MVP.
-3. **Desenhos fora do MVP**, coerente com o princípio VII.
-4. **Idioma:** comandos em inglês; interface e tutorial em português no MVP.
+2. **Desenhos fora do MVP**, coerente com o princípio VII.
+3. **Idioma:** comandos em inglês; interface e tutorial em português no MVP.
 
 ## 10. Rastreabilidade com a constituição
 

@@ -3,9 +3,9 @@
 Canvas infinito para orquestrar agentes de IA no Linux. Cada agente (Claude Code, Codex, Gemini
 CLI, OpenCode, Aider ou um shell) roda num terminal real, representado por um nó no canvas, ao lado
 de notas em Markdown. Você liga dois agentes com uma linha, e eles passam a conversar pela CLI
-`atlasoq`, que os próprios agentes aprendem com `atlasoq learn`.
+`atlasoq`. Todo agente já nasce sabendo usá-la: logo após iniciar, um hook roda o `atlasoq learn`.
 
-> **Status:** fase de especificação, sem código ainda. SPEC.md v0.2.0 aprovado (nome, stack e
+> **Status:** fase de especificação, sem código ainda. SPEC.md v0.3.0 aprovado (nome, stack e
 > empacotamento); a spec do MVP está em [specs/001](specs/001-mvp-orquestracao-agentes/spec.md).
 
 ## Sobre o projeto
@@ -20,8 +20,8 @@ código de nenhum aplicativo existente.
 - Agentes em nós de terminal, cada um com um PTY real, nome, papel e status
 - Notas em Markdown, que podem ser ligadas a agentes como contexto compartilhado
 - Conexões entre agentes, sempre criadas pelo usuário, com direção, limites e auditoria
-- CLI `atlasoq` com 8 comandos e tutorial para agentes
-- Persistência local do workspace
+- CLI `atlasoq` com 8 comandos e tutorial que cada agente recebe automaticamente ao iniciar
+- Persistência local do workspace em `<projeto>/.atlasoq/`
 - Instalação por pacote `.deb`
 
 ### A CLI dos agentes
@@ -43,9 +43,22 @@ atlasoq help
 Tauri v2 (UI em TypeScript), xterm.js para os terminais e núcleo em Rust com `portable-pty`. Ver
 [SPEC.md](SPEC.md), seção 4.
 
+### O diretório `.atlasoq/`
+
+```
+<projeto>/.atlasoq/
+├── workspace.json    # canvas, agentes e conexões
+├── notes/            # notas em Markdown
+├── profiles/         # perfis de agente do workspace
+├── learn.md          # regras do time, anexadas ao tutorial
+├── agents/           # gerado pelo app (hooks), ignorado pelo git
+├── logs/             # auditoria, ignorado pelo git
+└── backups/          # ignorado pelo git
+```
+
 ### Princípios
 
-Resumo da [constituição](.specify/memory/constitution.md) v1.1.0:
+Resumo da [constituição](.specify/memory/constitution.md) v1.2.0:
 
 1. Originalidade e licenciamento
 2. Linux primeiro (X11 e Wayland)
@@ -75,6 +88,7 @@ AtlasOrchestrator/
 │   └── 001-mvp-orquestracao-agentes/
 │       └── spec.md           # Spec do MVP (ATQ-001)
 ├── SPEC.md                   # Especificação geral, arquitetura, riscos e milestones
+├── LICENSE                   # Apache-2.0
 ├── .gitignore
 └── README.md
 ```
@@ -106,4 +120,4 @@ Mudanças de escopo passam primeiro pelo SPEC.md.
 
 ## Licença
 
-A licença ainda será definida (recomendação: Apache-2.0).
+Distribuído sob a [Apache License 2.0](LICENSE).

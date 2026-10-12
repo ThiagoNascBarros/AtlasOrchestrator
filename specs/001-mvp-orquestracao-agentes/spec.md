@@ -15,7 +15,7 @@ conversarem entre si. Os comandos `atlasoq` devem ser simples e fáceis de lembr
 um tutorial para os agentes aprenderem a trabalhar com o `atlasoq` pela linha de comando.
 Instalação por pacote .deb."
 
-**Referências**: [SPEC.md](../../SPEC.md) v0.2.0 · [Constituição](../../.specify/memory/constitution.md) v1.1.0
+**Referências**: [SPEC.md](../../SPEC.md) v0.3.0 · [Constituição](../../.specify/memory/constitution.md) v1.2.0
 
 ## Glossário
 
@@ -27,7 +27,12 @@ Instalação por pacote .deb."
 - **Conexão**: linha desenhada pelo usuário entre dois nós, com direção (→, ← ou ↔) e estado
   (ativa ou pausada). Entre dois agentes, permite mensagens; entre agente e nota, permite que o
   agente leia e acrescente texto na nota.
-- **Workspace**: o conjunto salvo de canvas, nós, notas e conexões.
+- **Workspace**: o conjunto salvo de canvas, nós, notas, conexões e perfis. Fica no diretório
+  `.atlasoq/` dentro de uma pasta raiz escolhida pelo usuário (normalmente a raiz do projeto).
+- **Perfil de agente**: receita para criar um agente (comando, argumentos, variáveis e o hook de
+  inicialização).
+- **Hook de inicialização**: passo automático executado logo depois que um agente nasce, cujo
+  papel no MVP é fazer o agente receber o tutorial do `atlasoq learn`.
 - **`atlasoq`**: CLI que os agentes usam, de dentro do próprio terminal, para conversar com outros
   agentes e usar notas.
 - **Tutorial para agentes**: texto curto, impresso por `atlasoq learn`, que ensina um agente a
@@ -114,34 +119,46 @@ ponto de maior risco de segurança, por isso entra junto da história 1.
 
 ---
 
-### User Story 3 - Agentes aprendem a usar o atlasoq sozinhos (Priority: P1)
+### User Story 3 - Agentes nascem sabendo usar o atlasoq (Priority: P1)
 
-Como usuário, não quero explicar a CLI a cada agente. Clico em "Ensinar atlasoq" no nó de um
-agente (ou digo a ele para rodar `atlasoq learn`) e ele recebe um tutorial curto, com exemplos
-prontos, que o deixa capaz de descobrir quem é, com quem pode falar e como mandar, ler e perguntar.
+Como usuário, não quero ensinar a CLI a cada agente nem apertar nenhum botão para isso. Quando crio
+um agente (ou ele é reiniciado, ou reabro o workspace), um hook de inicialização roda logo depois
+que ele sobe e faz o agente receber o tutorial do `atlasoq learn`. A partir daí ele sabe quem é,
+com quem pode falar e como mandar, ler, perguntar e usar notas.
 
-**Why this priority**: os usuários da CLI são agentes de IA. Sem o tutorial, cada orquestração
-depende de o usuário redigir instruções à mão, o que anula o ganho da história 2.
+**Why this priority**: os usuários da CLI são agentes de IA. Qualquer passo manual para ensiná-los
+seria esquecido e anularia o ganho da história 2.
 
-**Independent Test**: num agente real (ex.: Claude Code) ligado a outro, clicar em "Ensinar
-atlasoq" e pedir em linguagem natural "pergunte ao coder quantos testes existem"; o agente deve
-usar `atlasoq ask coder ...` corretamente sem outra explicação.
+**Independent Test**: criar um agente real (ex.: Claude Code) ligado a outro e, sem nenhuma outra
+ação, pedir em linguagem natural "pergunte ao coder quantos testes existem"; o agente deve usar
+`atlasoq ask coder ...` corretamente.
 
 **Acceptance Scenarios**:
 
-1. **Given** qualquer terminal de agente, **When** o agente executa `atlasoq learn`, **Then** recebe
-   o tutorial completo, que cabe em cerca de uma tela e meia de terminal e tem um exemplo copiável
-   de cada comando.
-2. **Given** um agente no canvas, **When** o usuário clica em "Ensinar atlasoq" no nó, **Then** o
-   agente recebe uma mensagem curta de apresentação com seu nome, seu papel, os agentes e notas
-   com quem está ligado, e a instrução de rodar `atlasoq learn`.
-3. **Given** um agente que digita um comando errado (ex.: `atlasoq sned coder oi`), **When** o
+1. **Given** um perfil de agente com hook de inicialização, **When** o usuário cria o agente,
+   **Then** logo após a inicialização o agente recebe o tutorial personalizado (nome, papel,
+   ligações) sem nenhuma ação do usuário, e o nó indica que o aprendizado foi concluído.
+2. **Given** um agente que já aprendeu, **When** ele é reiniciado ou o workspace é reaberto,
+   **Then** o hook roda de novo e o agente recebe o tutorial outra vez.
+3. **Given** um perfil cuja CLI oferece hooks próprios de início de sessão, **When** o agente nasce,
+   **Then** o AtlasOQ usa esse mecanismo, com arquivos gerados dentro de `.atlasoq/`, sem alterar
+   arquivos do projeto ou da configuração global da CLI.
+4. **Given** um perfil cuja CLI não oferece hooks, **When** o agente nasce, **Then** o AtlasOQ usa a
+   alternativa definida no perfil (prompt inicial na linha de comando ou mensagem enviada assim que
+   o agente fica pronto) para que o agente rode `atlasoq learn`.
+5. **Given** o hook falhou (ex.: o agente encerrou antes de ficar pronto), **When** o usuário olha o
+   nó, **Then** vê o aviso "aprendizado falhou" com o motivo, e o registro fica no log.
+6. **Given** o arquivo `.atlasoq/learn.md` com regras do time, **When** um agente aprende, **Then**
+   recebe o tutorial padrão seguido dessas regras.
+7. **Given** um perfil "Shell" (terminal para uso humano), **When** é criado, **Then** nenhum hook
+   de aprendizado é executado.
+8. **Given** um agente que digita um comando errado (ex.: `atlasoq sned coder oi`), **When** o
    comando falha, **Then** a resposta sugere o comando provável (`send`) e mostra o uso correto.
-4. **Given** um agente que executa `atlasoq help` ou `atlasoq help send`, **When** o comando roda,
+9. **Given** um agente que executa `atlasoq help` ou `atlasoq help send`, **When** o comando roda,
    **Then** mostra a lista de comandos ou o uso do comando pedido, com um exemplo.
-5. **Given** a documentação do projeto, **When** um colaborador abre `docs/`, **Then** encontra o
-   mesmo tutorial (para agentes) e um guia para usuários sobre como montar orquestrações comuns
-   (ex.: um coordenador ligado a vários executores; um executor ligado a um revisor).
+10. **Given** a documentação do projeto, **When** um colaborador abre `docs/`, **Then** encontra o
+    mesmo tutorial (para agentes) e um guia para usuários sobre como montar orquestrações comuns
+    (ex.: um coordenador ligado a vários executores; um executor ligado a um revisor).
 
 ---
 
@@ -186,7 +203,7 @@ tamanho, ou, se eu preferir, ficam parados até eu mandar iniciar.
 abaixo de P1 porque no MVP o processo dos agentes não sobrevive ao fechamento do app.
 
 **Independent Test**: montar um workspace com agentes, notas e ligações; encerrar o app à força;
-reabrir e comparar.
+reabrir e comparar o canvas e o conteúdo de `.atlasoq/`.
 
 **Acceptance Scenarios**:
 
@@ -202,7 +219,14 @@ reabrir e comparar.
    workspace é salvo, **Then** o valor dessa variável não aparece em nenhum arquivo do workspace.
 5. **Given** uma nota editada fora do app com o app fechado, **When** o workspace é reaberto,
    **Then** a nota mostra o conteúdo novo.
-6. **Given** o arquivo principal do workspace corrompido, **When** o app tenta abri-lo, **Then**
+6. **Given** uma pasta de projeto, **When** o usuário cria um workspace nela, **Then** o app cria
+   `<pasta>/.atlasoq/` com os arquivos versionáveis (workspace, notas, perfis) e um `.gitignore`
+   próprio que exclui logs, backups e arquivos gerados por agente.
+7. **Given** um `.atlasoq/` vindo de um repositório clonado, **When** o usuário abre o workspace pela
+   primeira vez, **Then** o app mostra os comandos, perfis, hooks e instruções que seriam
+   executados e só inicia os agentes depois da aprovação; se esses itens mudarem depois, pede
+   aprovação de novo.
+8. **Given** o arquivo principal do workspace corrompido, **When** o app tenta abri-lo, **Then**
    oferece restaurar a cópia válida mais recente.
 
 ---
@@ -258,6 +282,14 @@ rodar `atlasoq me`; depois desinstalar.
   do AtlasOQ.
 - Dois apps AtlasOQ abertos ao mesmo tempo → cada agente fala só com a instância que o criou.
 - Mesmo workspace aberto duas vezes → a segunda abertura é bloqueada com aviso.
+- A CLI do agente demora a ficar pronta (login, atualização) → o hook espera até um tempo-limite
+  e, se estourar, marca "aprendizado falhou" sem travar o agente.
+- O usuário digita no agente antes do hook terminar → o hook não mistura texto com o que o usuário
+  está digitando; aguarda ou desiste e avisa.
+- Uma nova ligação é criada depois que o agente aprendeu → o agente descobre pelo `atlasoq list`
+  (o tutorial orienta consultar `list` antes de agir); não há reenvio automático do tutorial.
+- `.atlasoq/learn.md` muito grande → é truncado no limite de tamanho com aviso no nó.
+- A pasta raiz não permite escrita → o app recusa criar o workspace ali e explica o motivo.
 
 ## Requirements *(mandatory)*
 
@@ -353,14 +385,27 @@ rodar `atlasoq me`; depois desinstalar.
   em vai-e-vem, usar notas para contexto longo) e os erros mais comuns.
 - **FR-027**: O tutorial MUST ser personalizado com o nome e as ligações do agente que o executou,
   quando executado dentro do app.
-- **FR-028**: Cada nó de agente MUST ter a ação "Ensinar atlasoq", que entrega ao agente uma
-  mensagem curta de apresentação (nome, papel, ligações e a instrução `atlasoq learn`). A ação só
-  ocorre por clique do usuário. Perfis MAY ter a opção "ensinar ao iniciar", desligada por padrão.
+- **FR-028**: Todo agente MUST aprender a CLI automaticamente: logo após a inicialização, o hook
+  de inicialização do perfil MUST fazer o agente receber o tutorial personalizado, sem ação do
+  usuário. O hook MUST rodar de novo quando o agente é reiniciado e quando o workspace é reaberto.
+  NÃO MUST existir passo manual (botão ou comando do usuário) necessário para o agente aprender.
+- **FR-028a**: O hook MUST suportar estes modos, escolhidos por perfil: `hook` (usa o mecanismo de
+  início de sessão da própria CLI, com arquivos gerados em `.atlasoq/`), `prompt` (passa à CLI um
+  prompt inicial pedindo para rodar `atlasoq learn`), `type` (envia essa instrução ao agente assim
+  que ele fica pronto) e `off`. Os perfis prontos MUST vir com o modo mais adequado a cada CLI, e
+  "Shell" com `off`.
+- **FR-028b**: O nó MUST mostrar o estado do aprendizado (aguardando, concluído, falhou com motivo)
+  e o resultado MUST ir para o log do workspace.
+- **FR-028c**: O conteúdo de `.atlasoq/learn.md`, se existir, MUST ser anexado ao tutorial, com
+  limite de tamanho.
+- **FR-028d**: O hook MUST NOT alterar arquivos fora de `.atlasoq/` (ex.: `AGENTS.md`, `CLAUDE.md`,
+  `.claude/`, configuração global das CLIs).
 - **FR-029**: O projeto MUST publicar o tutorial para agentes em `docs/` (mesmo conteúdo do
   `atlasoq learn`, sem personalização) e um guia para usuários com receitas de orquestração
   (coordenador e executores; executor e revisor; nota de plano compartilhada).
 - **FR-030**: MUST existir um teste automatizado que executa todos os exemplos do tutorial contra
-  o app e falha se algum deixar de funcionar.
+  o app e falha se algum deixar de funcionar, e outro que verifica que um agente recém-criado
+  recebe o tutorial pelo hook em cada modo (`hook`, `prompt`, `type`).
 
 **Notas**
 
@@ -377,7 +422,16 @@ rodar `atlasoq me`; depois desinstalar.
 **Persistência**
 
 - **FR-035**: O sistema MUST salvar automaticamente o workspace (posições, zoom, nós, notas,
-  conexões, configurações dos agentes) em arquivos de texto locais, sem rede.
+  conexões, configurações dos agentes, perfis) em arquivos de texto locais, sem rede, dentro de
+  `<raiz>/.atlasoq/`.
+- **FR-035a**: O diretório `.atlasoq/` MUST separar arquivos versionáveis (workspace, notas, perfis,
+  `learn.md`) de estado local (logs, backups, arquivos gerados por agente), e o app MUST criar um
+  `.atlasoq/.gitignore` que exclui o estado local.
+- **FR-035b**: Perfis MUST existir em dois níveis: globais do usuário e do workspace
+  (`.atlasoq/profiles/`); o do workspace prevalece em caso de mesmo nome.
+- **FR-035c**: Antes de executar comandos, perfis, hooks ou instruções de um `.atlasoq/` que o
+  usuário não criou ou não aprovou nesta máquina, o app MUST mostrá-los e pedir aprovação, e MUST
+  pedir de novo quando mudarem.
 - **FR-036**: Gravações MUST ser atômicas, e o sistema MUST manter cópias das últimas versões
   válidas para restauração.
 - **FR-037**: Ao reabrir um workspace, os agentes MUST ser reiniciados com o mesmo comando,
@@ -401,7 +455,11 @@ rodar `atlasoq me`; depois desinstalar.
 - **Agente (nó)**: nome único, papel, perfil de origem, comando, argumentos, diretório, variáveis de
   ambiente (com marcação de secretas), posição e tamanho, tamanho do terminal, status em tempo de
   execução.
-- **Perfil de agente**: nome, comando, argumentos, variáveis padrão, opção "ensinar ao iniciar".
+- **Perfil de agente**: nome, comando, argumentos, variáveis padrão, modo do hook de inicialização
+  (`hook`, `prompt`, `type`, `off`), nível (global ou do workspace).
+- **Diretório `.atlasoq/`**: raiz física do workspace, com parte versionável e parte local.
+- **Aprovação de workspace**: registro local de que o usuário aprovou os comandos e hooks de um
+  `.atlasoq/` em determinado estado.
 - **Nota (nó)**: nome único, arquivo Markdown, posição e tamanho.
 - **Conexão**: origem, destino, direção, estado (ativa, pausada, pausada automaticamente), limites
   (trocas consecutivas, taxa).
@@ -416,9 +474,11 @@ rodar `atlasoq me`; depois desinstalar.
 
 - **SC-001**: Um usuário novo instala o `.deb`, cria dois agentes, liga os dois e faz um enviar
   uma mensagem ao outro em menos de 5 minutos, sem consultar documentação externa.
-- **SC-002**: Depois de receber "Ensinar atlasoq", um agente de IA de mercado (testado com pelo
-  menos duas CLIs diferentes) executa corretamente, sem ajuda adicional, as tarefas "pergunte ao X",
+- **SC-002**: Recém-criado e sem nenhuma instrução do usuário, um agente de IA de mercado (testado
+  com pelo menos duas CLIs diferentes) executa corretamente, sem ajuda adicional, as tarefas "pergunte ao X",
   "mande para X" e "anote na nota Y" em pelo menos 9 de 10 tentativas.
+- **SC-002a**: 100% dos agentes criados com perfis prontos (exceto "Shell") recebem o tutorial em
+  até 30 segundos após ficarem prontos, sem ação do usuário.
 - **SC-003**: O tutorial de `atlasoq learn` tem no máximo 60 linhas e 100% dos seus exemplos passam
   no teste automatizado.
 - **SC-004**: Um agente que erra o nome de um comando recebe sugestão correta em 100% dos casos de
@@ -454,4 +514,9 @@ rodar `atlasoq me`; depois desinstalar.
 - Desenhos à mão livre, rpm, Flatpak, AppImage, macOS e Windows estão fora deste escopo.
 - Comandos da CLI são em inglês (padrão de CLIs); o tutorial e a interface do app são em português
   no MVP, com a estrutura preparada para tradução.
-- A licença do projeto ainda será decidida (recomendação: Apache-2.0); isso não bloqueia a spec.
+- O projeto é licenciado sob Apache-2.0.
+- O modo `hook` depende de cada CLI oferecer um mecanismo de início de sessão configurável por
+  arquivo ou flag sem tocar na configuração do projeto; quais CLIs suportam isso será confirmado no
+  plano. As demais usam `prompt` ou `type`.
+- Hooks no MVP só executam o aprendizado (`atlasoq learn`); hooks com scripts arbitrários do usuário
+  ficam para depois.

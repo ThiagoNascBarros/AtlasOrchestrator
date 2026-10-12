@@ -1,36 +1,32 @@
 <!--
 Sync Impact Report
 ==================
-Versão: 1.0.0 → 1.1.0 (MINOR: novos princípios VIII e IX, decisões de stack e empacotamento,
-expansão do escopo do MVP para a orquestração de agentes)
+Versão: 1.1.0 → 1.2.0 (MINOR: aprendizado automático por hook, diretório .atlasoq, licença)
 
 Princípios alterados:
-- Título e preâmbulo: "AtlasOrchestrator" → "AtlasOQ"; o canvas passa a ser descrito como canvas
-  de orquestração de agentes de IA.
-- IV. Comunicação Entre Agentes com Consentimento Explícito: a comunicação passa a ocorrer por
-  mensagens mediadas pela CLI `atlasoq`; pipe bruto entre PTYs fica proibido.
-- VII. Escopo de MVP: inclui a CLI `atlasoq` e o tutorial para agentes; desenhos ficam fora do MVP.
-
-Princípios adicionados:
-- VIII. CLI Simples e Memorável
-- IX. Agentes Aprendem pela Própria CLI
+- V. Persistência Local e Legível: o workspace passa a viver em `<raiz>/.atlasoq/`, com separação
+  entre arquivos versionáveis e estado local.
+- IX. Agentes Aprendem pela Própria CLI: a ação manual no canvas ("Ensinar atlasoq") foi removida;
+  todo agente aprende a CLI automaticamente por um hook de inicialização.
 
 Seções alteradas:
-- Restrições de Plataforma e Segurança: stack definida (Tauri v2 + xterm.js + portable-pty);
-  empacotamento oficial apenas em .deb.
+- Restrições de Plataforma e Segurança: licença Apache-2.0; confiança no workspace antes de
+  executar comandos e hooks definidos em `.atlasoq/`.
+
+Histórico:
+- 1.1.0: nome AtlasOQ, princípios VIII e IX, stack definida, empacotamento .deb.
+- 1.0.0: versão inicial.
 
 Templates:
-- .specify/templates/plan-template.md ✅ sem alteração necessária (Constitution Check é genérico)
-- .specify/templates/spec-template.md ✅ sem alteração necessária
-- .specify/templates/tasks-template.md ✅ sem alteração necessária
+- .specify/templates/*.md ✅ sem alteração necessária
 
 Documentos dependentes:
-- README.md ✅ atualizado (nome, stack, empacotamento)
-- SPEC.md ✅ atualizado (v0.2.0)
-- specs/001-mvp-orquestracao-agentes/spec.md ✅ criado
+- README.md ✅ atualizado
+- SPEC.md ✅ atualizado (v0.3.0)
+- specs/001-mvp-orquestracao-agentes/spec.md ✅ atualizado
+- LICENSE ✅ criado (Apache-2.0)
 
-TODOs pendentes:
-- TODO(LICENSE): licença do projeto ainda não decidida (recomendação: Apache-2.0).
+TODOs pendentes: nenhum.
 -->
 
 # AtlasOQ Constitution
@@ -81,8 +77,11 @@ implícito, invisível ou ilimitado. Tornar a conexão explícita, visível, lim
 principal barreira de segurança do produto.
 
 ### V. Persistência Local e Legível
-O workspace (canvas, posições, notas, conexões) MUST ser salvo localmente em um formato de texto
-estruturado e versionável (JSON para o workspace, Markdown para as notas). O app MUST abrir e
+O workspace (canvas, posições, notas, conexões, perfis de agente) MUST ser salvo localmente no
+diretório `.atlasoq/` dentro da raiz do workspace escolhida pelo usuário, em formato de texto
+estruturado e versionável (JSON para o workspace e perfis, Markdown para as notas). Estado local
+e efêmero (logs, backups, arquivos gerados por agente) MUST ficar em subpastas ignoradas pelo git
+por padrão. O app MUST abrir e
 salvar sem rede. Os dados MUST sobreviver a reinício e a crash. Uma escrita MUST ser atômica
 (arquivo temporário e renomeação), para que um crash não corrompa o workspace. Segredos NÃO MUST
 ser serializados no workspace.
@@ -119,15 +118,19 @@ Rationale: quem usa a CLI são agentes de IA guiados por instruções curtas. Um
 previsível reduz erros, tokens gastos e a necessidade de intervenção humana.
 
 ### IX. Agentes Aprendem pela Própria CLI
-O projeto MUST manter um tutorial para agentes, acessível pela própria CLI (`atlasoq learn`) e
-publicado em `docs/`. O tutorial MUST ser curto (cabe numa tela e meia de terminal), escrito para
-ser lido por um agente de IA, com exemplos copiáveis de cada comando. O tutorial MUST ser
-atualizado no mesmo PR que alterar a CLI, e MUST existir um teste automatizado que executa os
-exemplos do tutorial contra o app. O usuário MUST conseguir enviar o tutorial a um agente com uma
-ação explícita no canvas; o app NÃO MUST gravar instruções no repositório do usuário por conta
-própria.
-Rationale: a orquestração só funciona se os agentes souberem usar a CLI sem depender de o usuário
-explicar tudo a cada sessão. Um tutorial testado não envelhece em silêncio.
+Todo agente MUST aprender a usar a CLI `atlasoq` automaticamente ao nascer, sem ação manual do
+usuário: logo após a inicialização, um hook de inicialização definido no perfil do agente MUST
+fazer o agente receber o conteúdo de `atlasoq learn`. O mesmo vale quando o agente é reiniciado ou
+o workspace é reaberto. O tutorial MUST ser curto (cabe numa tela e meia de terminal), escrito para
+ser lido por um agente de IA, com exemplos copiáveis de cada comando, e MUST ser publicado em
+`docs/`. O tutorial MUST ser atualizado no mesmo PR que alterar a CLI, e MUST existir um teste
+automatizado que executa os exemplos do tutorial contra o app e outro que verifica que um agente
+recém-criado recebe o tutorial. Arquivos gerados para o hook MUST ficar em `.atlasoq/`; o app NÃO
+MUST alterar arquivos fora de `.atlasoq/` (ex.: `AGENTS.md`, `CLAUDE.md`, `.claude/`, configuração
+global das CLIs).
+Rationale: a orquestração só funciona se os agentes souberem usar a CLI sem o usuário repetir
+instruções a cada sessão. Um passo manual seria esquecido; um tutorial testado não envelhece em
+silêncio.
 
 ## Restrições de Plataforma e Segurança
 
@@ -144,6 +147,11 @@ explicar tudo a cada sessão. Um tutorial testado não envelhece em silêncio.
 - **Stack definida:** Tauri v2 (UI em TypeScript sobre WebKitGTK), xterm.js para renderizar
   terminais e núcleo em Rust com `portable-pty`. O núcleo Rust NÃO MUST depender do Tauri, para
   permitir trocar a camada de UI. Mudar a stack MUST passar por ADR e emenda.
+- **Confiança no workspace:** comandos de agentes, perfis, hooks e instruções lidos de um
+  `.atlasoq/` que o usuário não criou ou não aprovou nesta máquina (ex.: vindo de um repositório
+  clonado) MUST ser mostrados e aprovados pelo usuário antes da primeira execução, e de novo
+  sempre que mudarem.
+- **Licença:** o projeto é distribuído sob Apache-2.0. Dependências MUST ter licença compatível.
 - **Empacotamento:** o único formato oficial de instalação é `.deb`. Outros formatos (rpm, Flatpak,
   AppImage) MUST passar por emenda antes de serem distribuídos.
 
@@ -183,4 +191,4 @@ PR que viole um princípio MUST ser bloqueado até que a violação seja corrigi
 seja aprovada. Complexidade adicional (nova dependência, nova camada, nova abstração) MUST ser
 justificada no próprio PR.
 
-**Version**: 1.1.0 | **Ratified**: 2026-10-11 | **Last Amended**: 2026-10-11
+**Version**: 1.2.0 | **Ratified**: 2026-10-11 | **Last Amended**: 2026-10-11
